@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EconomStock — Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET ──────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:     #080C14;   --bg2:#0E1525;   --bg3:#141D30;   --bg4:#1C2840;
+  --bdr:    rgba(255,255,255,.06);      --bdr2:rgba(255,255,255,.11);
+  --txt:    #D8E4F0;   --txt2:#6B84A8;  --txt3:#3A4F70;
+  --gold:   #F2A007;   --gold2:#FFD166;
+  --hook:   #E84545;   --value:#E0820A; --trust:#3B82F6; --close:#22C55E;
+  --r:10px; --rl:14px; --rf:20px;
+}
+html,body{background:var(--bg);color:var(--txt);font-family:'Outfit',sans-serif;font-size:14px;min-height:100vh;line-height:1.5}
+button{font-family:'Outfit',sans-serif;cursor:pointer}
+input,select,textarea{font-family:'Outfit',sans-serif}
+
+/* ─── LAYOUT ─────────────────────────────────────────────────── */
+.shell{display:flex;min-height:100vh}
+.side{width:230px;background:var(--bg2);border-right:1px solid var(--bdr);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:40;overflow-y:auto}
+.main{margin-left:230px;flex:1;padding:28px 30px;min-height:100vh}
+
+/* sidebar */
+.logo-wrap{padding:22px 20px 16px;border-bottom:1px solid var(--bdr)}
+.logo{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.1em}
+.logo-tag{font-size:10px;color:var(--txt3);letter-spacing:.14em;text-transform:uppercase;margin-top:3px}
+.nav-body{padding:14px 10px;flex:1}
+.nav-sec{margin-bottom:22px}
+.nav-sec-lbl{font-size:9px;color:var(--txt3);letter-spacing:.16em;text-transform:uppercase;padding:0 10px;margin-bottom:6px}
+.nv{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--txt2);transition:all .14s;border:1px solid transparent;font-weight:500}
+.nv:hover{background:var(--bg3);color:var(--txt)}
+.nv.on{background:var(--bg4);color:var(--gold);border-color:rgba(242,160,7,.14)}
+.nv svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.side-foot{padding:14px 16px;border-top:1px solid var(--bdr)}
+.sync-btn{width:100%;padding:8px;background:rgba(242,160,7,.1);border:1px solid rgba(242,160,7,.22);color:var(--gold);font-size:12px;border-radius:8px;transition:all .14s;font-weight:600;letter-spacing:.02em}
+.sync-btn:hover{background:rgba(242,160,7,.18)}
+.sync-st{font-size:10px;color:var(--txt3);text-align:center;margin-top:6px;font-family:'Space Mono',monospace}
+
+/* ─── TOPBAR ─────────────────────────────────────────────────── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
+.pg-title{font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;color:var(--txt)}
+.pg-title span{color:var(--gold)}
+.topbar-r{display:flex;align-items:center;gap:10px}
+.badge{font-size:10px;padding:3px 11px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.badge-demo{background:rgba(232,69,69,.12);border:1px solid rgba(232,69,69,.25);color:var(--hook)}
+.badge-live{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:var(--close)}
+
+/* ─── SETUP PANEL ────────────────────────────────────────────── */
+.setup{background:var(--bg2);border:1px solid rgba(242,160,7,.2);border-radius:var(--rl);padding:22px 24px;margin-bottom:24px;position:relative;overflow:hidden}
+.setup::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
+.setup-title{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:14px;font-family:'Space Mono',monospace;letter-spacing:.04em}
+.setup-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.ss{background:var(--bg3);border-radius:var(--r);padding:12px 14px;border:1px solid var(--bdr)}
+.ss-n{font-family:'Space Mono',monospace;font-size:10px;color:var(--gold);margin-bottom:5px}
+.ss-t{font-size:11px;color:var(--txt2);line-height:1.55}
+.ss-t code{background:var(--bg4);padding:1px 5px;border-radius:4px;font-size:10px;color:var(--gold2)}
+.url-row{display:flex;gap:8px}
+.url-in{flex:1;background:var(--bg);border:1px solid var(--bdr2);color:var(--txt);font-size:12px;padding:9px 14px;border-radius:8px;font-family:'Space Mono',monospace;outline:none;transition:border-color .14s}
+.url-in:focus{border-color:rgba(242,160,7,.4)}
+.url-in::placeholder{color:var(--txt3)}
+.btn-conn{padding:9px 20px;background:var(--gold);color:#0A0E18;font-weight:700;font-size:12px;border:none;border-radius:8px;letter-spacing:.03em;transition:all .14s}
+.btn-conn:hover{background:var(--gold2)}
+
+/* ─── STAT ROW ───────────────────────────────────────────────── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.stat{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rl);padding:16px 18px;position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat.h::after{background:var(--hook)} .stat.v::after{background:var(--value)}
+.stat.t::after{background:var(--trust)}.stat.c::after{background:var(--close)}
+.stat-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600}
+.stat-n{font-family:'Space Mono',monospace;font-size:28px;color:var(--txt);margin-bottom:3px}
+.stat-sub{font-size:11px;color:var(--txt2)}
+
+/* ─── PROG ───────────────────────────────────────────────────── */
+.prog-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rl);padding:18px 22px;margin-bottom:22px}
+.prog-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.prog-lbl{font-size:13px;font-weight:700;color:var(--txt)}
+.prog-pct{font-family:'Space Mono',monospace;font-size:22px;color:var(--gold)}
+.prog-track{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:14px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.wk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.wk{text-align:center}
+.wk-bar-w{height:44px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:5px}
+.wk-bar{width:26px;border-radius:4px 4px 0 0;background:var(--bg4);transition:height .5s ease}
+.wk-bar.full{background:var(--close)}.wk-bar.part{background:var(--value)}
+.wk-l{font-size:10px;color:var(--txt3)}.wk-c{font-family:'Space Mono',monospace;font-size:11px;color:var(--txt2);margin-top:2px}
+
+/* ─── TWO COL ────────────────────────────────────────────────── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rl);overflow:hidden}
+.card-hd{padding:13px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.card-ttl{font-size:12.5px;font-weight:700;color:var(--txt);letter-spacing:.02em}
+.card-body{padding:16px 18px}
+
+/* ─── TABLE ──────────────────────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.12em;padding:6px 8px;border-bottom:1px solid var(--bdr);font-weight:600;text-align:center}
+.tbl th:first-child{text-align:left}
+.tbl td{padding:9px 8px;font-size:11.5px;border-bottom:1px solid var(--bdr);color:var(--txt2)}
+.tbl td:first-child{color:var(--txt);font-weight:500}
+.tbl td:not(:first-child){text-align:center}
+.tbl tr:last-child td{border-bottom:none}
+.cr{color:#4ADE80!important;font-family:'Space Mono',monospace;font-size:10.5px}
+.ct{color:#60A5FA!important;font-family:'Space Mono',monospace;font-size:10.5px}
+.ca{color:#F87171!important;font-family:'Space Mono',monospace;font-size:10.5px}
+.act-in{background:var(--bg);border:1px solid var(--bdr2);color:var(--txt);font-size:11px;padding:3px 8px;border-radius:6px;font-family:'Space Mono',monospace;width:90px;text-align:center;outline:none;transition:border-color .14s}
+.act-in:focus{border-color:rgba(242,160,7,.4)}
+
+/* ─── DAY GRID ───────────────────────────────────────────────── */
+.day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:22px}
+.dc{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:8px 6px;cursor:pointer;text-align:center;transition:all .14s}
+.dc:hover{background:var(--bg3);border-color:var(--bdr2)}
+.dc.on{background:var(--bg3);border-color:rgba(242,160,7,.35)}
+.dc.done{opacity:.5}
+.dc-n{font-family:'Space Mono',monospace;font-size:12px;color:var(--txt2);margin-bottom:3px}
+.dc.on .dc-n{color:var(--gold)}
+.dc-s{font-size:10px;font-weight:700;color:var(--txt);letter-spacing:.04em}
+.dc.done .dc-s{color:var(--txt3)}
+.dc-dots{display:flex;gap:2px;justify-content:center;margin-top:5px}
+.dc-dot{width:5px;height:5px;border-radius:50%}
+
+/* ─── DETAIL PANEL ───────────────────────────────────────────── */
+.det{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rl);overflow:hidden;margin-bottom:22px}
+.det-hd{padding:14px 20px;background:var(--bg3);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.det-stock{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--gold);margin-right:10px}
+.det-day{font-size:11px;color:var(--txt3);font-family:'Space Mono',monospace}
+.btn-mark{font-size:11px;padding:6px 16px;border-radius:8px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--close);font-weight:600;transition:all .14s}
+.btn-mark:hover{background:rgba(34,197,94,.2)} .btn-mark.on{background:rgba(34,197,94,.22);border-color:var(--close)}
+.slot-item{padding:14px 20px;border-bottom:1px solid var(--bdr);display:grid;grid-template-columns:48px 88px 1fr;gap:14px;align-items:start}
+.slot-item:last-child{border-bottom:none}
+.si-time{font-family:'Space Mono',monospace;font-size:11px;color:var(--txt3);padding-top:3px}
+.si-col{}
+.sbadge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.04em;display:inline-block}
+.bh{background:rgba(232,69,69,.14);color:#F87171;border:1px solid rgba(232,69,69,.2)}
+.bv{background:rgba(224,130,10,.14);color:#FCA72A;border:1px solid rgba(224,130,10,.2)}
+.bt{background:rgba(59,130,246,.14);color:#7DB8F5;border:1px solid rgba(59,130,246,.2)}
+.bc{background:rgba(34,197,94,.14);color:#6EE7A0;border:1px solid rgba(34,197,94,.2)}
+.si-status{display:flex;align-items:center;gap:5px;margin-top:7px}
+.si-status label{font-size:10px;color:var(--txt3)}
+.si-status select{font-size:10px;padding:3px 7px;border-radius:6px;background:var(--bg);border:1px solid var(--bdr2);color:var(--txt);outline:none;cursor:pointer}
+.si-body{}
+.si-title{font-size:13px;font-weight:600;color:var(--txt);margin-bottom:8px}
+.si-copy{font-size:12px;color:var(--txt2);line-height:1.75;white-space:pre-wrap;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.si-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tool-lnk{font-size:11px;color:var(--trust);background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);padding:4px 12px;border-radius:20px;text-decoration:none;transition:all .13s;display:inline-block}
+.tool-lnk:hover{background:rgba(59,130,246,.2)}
+
+/* ─── SHARE BUTTONS ──────────────────────────────────────────── */
+.share-wrap{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.share-lbl{font-size:10px;color:var(--txt3);font-weight:600;margin-right:2px}
+.sb{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid var(--bdr2);color:var(--txt2);background:var(--bg3);transition:all .12s;letter-spacing:.02em}
+.sb:hover{color:var(--txt);border-color:var(--bdr2);background:var(--bg4)}
+.sb.ok{background:rgba(34,197,94,.1);color:var(--close);border-color:rgba(34,197,94,.3)!important}
+.sb-th:hover{border-color:#999;color:#ccc}
+.sb-li:hover{border-color:#60A5FA;color:#60A5FA}
+.sb-tt:hover{border-color:#eee;color:#eee}
+.sb-ig:hover{border-color:#F472B6;color:#F472B6}
+.sb-sb:hover{border-color:#FB923C;color:#FB923C}
+
+/* ─── AI ASSISTANT BUTTONS ───────────────────────────────────── */
+.ai-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr)}
+.ai-lbl{font-size:10px;color:var(--txt3);font-weight:600;margin-right:2px}
+.ai-btn{font-size:10px;font-weight:600;padding:3px 11px;border-radius:20px;border:1px solid;transition:all .13s;text-decoration:none;display:inline-block;letter-spacing:.02em}
+.ai-claude{border-color:rgba(215,140,80,.4);color:#E8A96A;background:rgba(215,140,80,.08)}
+.ai-claude:hover{background:rgba(215,140,80,.16);text-decoration:none}
+.ai-gpt{border-color:rgba(25,195,125,.4);color:#3DCA96;background:rgba(25,195,125,.08)}
+.ai-gpt:hover{background:rgba(25,195,125,.16);text-decoration:none}
+.ai-gem{border-color:rgba(66,133,244,.4);color:#78AAFF;background:rgba(66,133,244,.08)}
+.ai-gem:hover{background:rgba(66,133,244,.16);text-decoration:none}
+
+/* ─── KPI GRID ───────────────────────────────────────────────── */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:22px}
+.kpi-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rl);padding:16px 18px}
+.kpi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.kpi-name{font-size:12px;font-weight:600;color:var(--txt2)}
+.kpi-tags{display:flex;gap:5px}
+.kpi-min{font-size:10px;padding:2px 8px;border-radius:12px;background:rgba(242,160,7,.1);color:var(--gold);border:1px solid rgba(242,160,7,.2)}
+.kpi-good{font-size:10px;padding:2px 8px;border-radius:12px;background:rgba(34,197,94,.1);color:var(--close);border:1px solid rgba(34,197,94,.2)}
+.kpi-weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.kw-lbl{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.kw-in{width:100%;background:var(--bg);border:1px solid var(--bdr);color:var(--txt);font-size:12px;padding:5px 4px;text-align:center;border-radius:6px;font-family:'Space Mono',monospace;outline:none;transition:border-color .14s}
+.kw-in:focus{border-color:rgba(242,160,7,.4)}
+
+/* ─── TEMPLATE ───────────────────────────────────────────────── */
+.tmpl-grid{display:grid;gap:14px}
+.tmpl-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rl);overflow:hidden}
+.tmpl-hd{padding:11px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px;background:var(--bg3)}
+.tmpl-body{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+.tmpl-opt{background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:11px 13px;position:relative}
+.tmpl-opt-lbl{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.tmpl-txt{font-size:12px;color:var(--txt2);line-height:1.7;white-space:pre-wrap}
+.cp-btn{position:absolute;top:8px;right:8px;font-size:9px;padding:2px 8px;border-radius:5px;background:var(--bg4);border:1px solid var(--bdr2);color:var(--txt3);transition:all .12s}
+.cp-btn:hover{color:var(--txt)} .cp-btn.ok{background:rgba(34,197,94,.1);color:var(--close);border-color:rgba(34,197,94,.3)}
+
+/* ─── TARGET PAGE ────────────────────────────────────────────── */
+.level-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.lv{border-radius:var(--rl);overflow:hidden;border:1px solid var(--bdr)}
+.lv-hd{padding:12px 16px;font-size:12px;font-weight:700;text-align:center}
+.lv-r .lv-hd{background:rgba(74,222,128,.1);color:#4ADE80;border-bottom:1px solid rgba(74,222,128,.15)}
+.lv-t .lv-hd{background:rgba(96,165,250,.1);color:#60A5FA;border-bottom:1px solid rgba(96,165,250,.15)}
+.lv-a .lv-hd{background:rgba(248,113,113,.1);color:#F87171;border-bottom:1px solid rgba(248,113,113,.15)}
+.lv-body{background:var(--bg2);padding:14px 16px}
+.lv-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px}
+.lv-row:last-child{border-bottom:none}
+.lv-met{color:var(--txt2)} .lv-val{font-family:'Space Mono',monospace;font-size:11px}
+.lv-r .lv-val{color:#4ADE80} .lv-t .lv-val{color:#60A5FA} .lv-a .lv-val{color:#F87171}
+
+/* ─── INSIGHT BOX ────────────────────────────────────────────── */
+.insight{background:var(--bg2);border-left:3px solid var(--trust);border-radius:var(--r);padding:12px 16px;font-size:12px;color:var(--txt2);line-height:1.7;margin-bottom:22px}
+.insight strong{color:var(--txt)}
+
+/* ─── PANES ──────────────────────────────────────────────────── */
+.pane{display:none}.pane.on{display:block}
+
+/* ─── TOAST ──────────────────────────────────────────────────── */
+.toast{position:fixed;bottom:22px;right:22px;z-index:999;background:var(--bg3);border:1px solid var(--bdr2);color:var(--txt);font-size:12px;padding:10px 18px;border-radius:10px;box-shadow:0 6px 28px rgba(0,0,0,.45);transform:translateY(70px);opacity:0;transition:all .22s;pointer-events:none;font-weight:500}
+.toast.on{transform:translateY(0);opacity:1}
+
+/* ─── LOADER ─────────────────────────────────────────────────── */
+.loader{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.spin{width:30px;height:30px;border:2px solid var(--bg4);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-family:'Space Mono',monospace;font-size:11px;color:var(--txt3)}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.fade{animation:up .28s ease both}
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader">
+  <div class="spin"></div>
+  <div class="load-txt" id="load-txt">Memuat dashboard...</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="shell">
+
+<!-- ─────────── SIDEBAR ─────────── -->
+<aside class="side">
+  <div class="logo-wrap">
+    <div class="logo">ECONOMSTOCK</div>
+    <div class="logo-tag">Content Command Center</div>
+  </div>
+  <nav class="nav-body">
+    <div class="nav-sec">
+      <div class="nav-sec-lbl">Overview</div>
+      <div class="nv on" data-p="dash" onclick="goNav(this)">
+        <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+        Dashboard
+      </div>
+      <div class="nv" data-p="target" onclick="goNav(this)">
+        <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><circle cx="8" cy="8" r="3.5"/><circle cx="8" cy="8" r="1"/></svg>
+        Target 3 Level
+      </div>
+    </div>
+    <div class="nav-sec">
+      <div class="nav-sec-lbl">Konten</div>
+      <div class="nv" data-p="kal" onclick="goNav(this)">
+        <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M1.5 6h13M5 1v3M11 1v3"/></svg>
+        Kalender 30 Hari
+      </div>
+      <div class="nv" data-p="tmpl" onclick="goNav(this)">
+        <svg viewBox="0 0 16 16"><path d="M3 4h10M3 8h8M3 12h6"/></svg>
+        Template Copy
+      </div>
+    </div>
+    <div class="nav-sec">
+      <div class="nav-sec-lbl">Analytics</div>
+      <div class="nv" data-p="kpi" onclick="goNav(this)">
+        <svg viewBox="0 0 16 16"><polyline points="1.5,12 5,7 8,9.5 11,5 14.5,4"/><path d="M11 4h3.5v3"/></svg>
+        KPI Tracker
+      </div>
+    </div>
+    <div class="nav-sec">
+      <div class="nav-sec-lbl">AI Assistant</div>
+      <div class="nv" data-p="ai" onclick="goNav(this)">
+        <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M11 3l1.5-1.5"/></svg>
+        AI Tools
+      </div>
+    </div>
+  </nav>
+  <div class="side-foot">
+    <button class="sync-btn" onclick="syncGAS()">⟳ Sync Google Sheet</button>
+    <div class="sync-st" id="sync-st">Belum tersinkron</div>
+  </div>
+</aside>
+
+<!-- ─────────── MAIN ─────────── -->
+<main class="main">
+
+<!-- ══ PANE: DASHBOARD ══════════════════════════════════════ -->
+<div class="pane on fade" id="pane-dash">
+  <div class="topbar">
+    <div class="pg-title">Dashboard <span>Overview</span></div>
+    <div class="topbar-r">
+      <span class="badge badge-demo" id="mode-badge">Demo Mode</span>
+    </div>
+  </div>
+
+  <!-- Setup -->
+  <div class="setup" id="setup-box">
+    <div class="setup-title">// HUBUNGKAN KE GOOGLE SHEET</div>
+    <div class="setup-steps">
+      <div class="ss"><div class="ss-n">01 / Import Sheet</div><div class="ss-t">Upload file <code>.xlsx</code> ke Google Sheets via <code>File → Import</code></div></div>
+      <div class="ss"><div class="ss-n">02 / Apps Script</div><div class="ss-t"><code>Extensions → Apps Script</code> → Paste <code>Code.gs</code> → buat file <code>index.html</code> → paste HTML</div></div>
+      <div class="ss"><div class="ss-n">03 / Deploy</div><div class="ss-t"><code>Deploy → New Deployment → Web App</code><br>Execute as: <code>Me</code><br>Access: <code>Anyone</code></div></div>
+      <div class="ss"><div class="ss-n">04 / Connect</div><div class="ss-t">Copy URL deployment lalu paste di bawah → klik Hubungkan</div></div>
+    </div>
+    <div class="url-row">
+      <input class="url-in" id="gas-url" placeholder="https://script.google.com/macros/s/XXXX.../exec">
+      <button class="btn-conn" onclick="connectGAS()">Hubungkan</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-row" id="stat-row">
+    <div class="stat h"><div class="stat-lbl">Hari Selesai</div><div class="stat-n" id="s-done">0</div><div class="stat-sub">dari 30 hari</div></div>
+    <div class="stat v"><div class="stat-lbl">Total Slot</div><div class="stat-n" id="s-slots">120</div><div class="stat-sub">target 120 konten</div></div>
+    <div class="stat t"><div class="stat-lbl">Sudah Posting</div><div class="stat-n" id="s-post">0</div><div class="stat-sub">slot tercentang ✓</div></div>
+    <div class="stat c"><div class="stat-lbl">Progres</div><div class="stat-n" id="s-pct">0%</div><div class="stat-sub">dari seluruh jadwal</div></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="prog-box">
+    <div class="prog-hd"><div class="prog-lbl">Progress 30 Hari</div><div class="prog-pct" id="prog-big">0%</div></div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="wk-row">
+      <div class="wk"><div class="wk-bar-w"><div class="wk-bar" id="wb1" style="height:6px"></div></div><div class="wk-l">Minggu 1</div><div class="wk-c" id="wc1">0/7</div></div>
+      <div class="wk"><div class="wk-bar-w"><div class="wk-bar" id="wb2" style="height:6px"></div></div><div class="wk-l">Minggu 2</div><div class="wk-c" id="wc2">0/7</div></div>
+      <div class="wk"><div class="wk-bar-w"><div class="wk-bar" id="wb3" style="height:6px"></div></div><div class="wk-l">Minggu 3</div><div class="wk-c" id="wc3">0/7</div></div>
+      <div class="wk"><div class="wk-bar-w"><div class="wk-bar" id="wb4" style="height:6px"></div></div><div class="wk-l">Minggu 4</div><div class="wk-c" id="wc4">0/9</div></div>
+    </div>
+  </div>
+
+  <!-- Target mini + KPI snapshot -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-hd"><div class="card-ttl">Target 30 Hari — Ringkasan</div></div>
+      <div class="card-body"><table class="tbl"><thead><tr><th>Metrik</th><th style="color:#4ADE80">Realistis</th><th style="color:#60A5FA">Tengah</th><th style="color:#F87171">Agresif</th></tr></thead><tbody id="tbl-mini"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-ttl">KPI Snapshot</div></div>
+      <div class="card-body" id="kpi-snap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANE: TARGET ══════════════════════════════════════════ -->
+<div class="pane fade" id="pane-target">
+  <div class="topbar"><div class="pg-title">Target <span>3 Level</span></div></div>
+  <div class="level-grid" id="lv-grid"></div>
+  <div class="insight" id="insight-box">
+    Target konkret 30 hari: buat <strong>90–120 konten</strong> dan hasilkan minimal <strong>50 penjualan</strong> dari traffic organik.<br>
+    <strong>Winning pattern &gt; ide baru.</strong> Ulangi format yang perform, ulangi saham yang dapat traksi.
+  </div>
+  <div class="card">
+    <div class="card-hd"><div class="card-ttl">Update Aktual vs Target</div></div>
+    <div class="card-body"><table class="tbl"><thead><tr><th>Metrik</th><th style="color:#4ADE80">Realistis</th><th style="color:#60A5FA">Tengah</th><th style="color:#F87171">Agresif</th><th style="color:var(--gold)">Aktual (isi)</th></tr></thead><tbody id="tbl-full"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ══ PANE: KALENDER ═══════════════════════════════════════ -->
+<div class="pane fade" id="pane-kal">
+  <div class="topbar"><div class="pg-title">Kalender <span>30 Hari</span></div></div>
+  <div class="day-grid" id="day-grid"></div>
+  <div class="det" id="det-panel">
+    <div style="padding:44px;text-align:center;color:var(--txt3);font-size:13px">Pilih hari di atas untuk lihat konten + share</div>
+  </div>
+</div>
+
+<!-- ══ PANE: TEMPLATE ════════════════════════════════════════ -->
+<div class="pane fade" id="pane-tmpl">
+  <div class="topbar"><div class="pg-title">Template <span>Copywriting</span></div></div>
+  <div class="insight">Ganti <code style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:11px;color:var(--gold2)">{kode}</code>, <code style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:11px;color:var(--gold2)">{nilai}</code>, <code style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:11px;color:var(--gold2)">{upside}</code> dengan data dari tool. Klik <strong>Salin</strong> → paste langsung ke platform.</div>
+  <div class="tmpl-grid" id="tmpl-grid"></div>
+</div>
+
+<!-- ══ PANE: KPI ═════════════════════════════════════════════ -->
+<div class="pane fade" id="pane-kpi">
+  <div class="topbar"><div class="pg-title">KPI <span>Tracker</span></div></div>
+  <div class="insight">Update setiap akhir minggu. <strong>Klik sel → ketik → tekan Enter</strong> untuk simpan ke Google Sheet secara langsung.</div>
+  <div class="kpi-grid" id="kpi-grid"></div>
+</div>
+
+<!-- ══ PANE: AI TOOLS ═══════════════════════════════════════ -->
+<div class="pane fade" id="pane-ai">
+  <div class="topbar"><div class="pg-title">AI <span>Tools</span></div></div>
+  <div class="insight"><strong>Gunakan AI untuk bantu buat copy, analisis saham, atau riset konten.</strong> Pilih platform AI yang kamu suka, copy prompt yang sudah disiapkan, lalu tempel langsung.</div>
+  <div id="ai-cards"></div>
+</div>
+
+</main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+const STOCKS=["BBCA","BBRI","BMRI","TLKM","ASII","GOTO","BREN","ANTM","UNVR","ICBP","KLBF","PGAS","SMGR","PTBA","AKRA","EXCL","MTEL","CPIN","JPFA","MDKA","ADRO","ITMG","AMMN","INCO","MEDC","SIDO","EMTK","BUMI","INDF","BYAN"];
+const SORE=["Data 1%","Insight","Edukasi","Data 1%","Insight","Data 1%","Edukasi","Insight","Data 1%","Edukasi","Insight","Data 1%","Edukasi","Data 1%","Insight","Data 1%","Edukasi","Insight","Data 1%","Edukasi","Insight","Data 1%","Edukasi","Insight","Data 1%","Edukasi","Data 1%","Insight","Data 1%","Edukasi"];
+const LINKS={Radar:"https://www.economstock.com/p/radar.html",Kalkulator:"https://www.economstock.com/p/tools.html","Data 1%":"https://www.economstock.com/p/kepemilkan.html",Insight:"https://www.economstock.com/search/label/Insight",Edukasi:"https://www.economstock.com/search/label/Insight"};
+const TARGETS=[
+  {metric:"Traffic (per bulan)", real:"8K → 20K",   mid:"8K → 30K",  aggr:"8K → 50K+",  actual:""},
+  {metric:"Followers baru",      real:"+500–1.000",  mid:"+1K–2.5K",  aggr:"+3K–5K",     actual:""},
+  {metric:"Transaksi penjualan", real:"20–40",        mid:"50–100",    aggr:"150–300",    actual:""},
+  {metric:"Conversion rate",     real:"0.2–0.5%",    mid:"0.5–1%",    aggr:"1–2%",       actual:""},
+  {metric:"CTR ke website",      real:"≥1%",          mid:"2–3%",      aggr:"4–5%",       actual:""},
+];
+const KPI_META=[
+  {kpi:"CTR ke website",          min:"1%",    good:"2–5%"},
+  {kpi:"Penggunaan Radar",        min:"10/hr", good:"25+/hr"},
+  {kpi:"Penggunaan Kalkulator",   min:"10/hr", good:"25+/hr"},
+  {kpi:"Conversion ke pembelian", min:"0.5%",  good:"1%+"},
+  {kpi:"Konten terbaik (save)",   min:"—",     good:"—"},
+  {kpi:"Konten terbaik (klik)",   min:"—",     good:"—"},
+  {kpi:"Saham paling perform",    min:"—",     good:"—"},
+];
+const TEMPLATES=[
+  {slot:"Radar",      time:"08.00",badge:"bh",badgeTxt:"Hook",
+   opts:["${s} sekarang ada di ${persen}% terbawah\nBiasanya kondisi seperti ini mulai fase ${zona}","${s} jarang ada di posisi ini\nMasuk area bawah historis — peluang atau jebakan?"]},
+  {slot:"Kalkulator", time:"12.00",badge:"bv",badgeTxt:"Value",
+   opts:["Nilai wajar ${s} ada di Rp ${nilai}\nHarga sekarang masih di bawah itu","Secara valuasi, ${s} masih ada potensi sekitar ${upside}%\nMenarik untuk diperhatikan"]},
+  {slot:"Data 1%",    time:"16.00",badge:"bt",badgeTxt:"Trust",
+   opts:["Yang jarang diperhatikan\nKepemilikan >1% di ${s} dipegang pemain besar\nIni bukan saham 'kosong'","Data kepemilikan ${s} bicara sendiri\nSiapa yang masuk dan seberapa besar posisinya"]},
+  {slot:"Insight",    time:"16.00",badge:"bt",badgeTxt:"Trust",
+   opts:["Banyak orang fokus harga\nPadahal yang lebih penting: posisi dan siapa yang pegang ${s}","${s} bukan sekadar angka\nAda yang diam-diam mengakumulasi — data tidak bisa bohong"]},
+  {slot:"Dashboard",  time:"20.00",badge:"bc",badgeTxt:"Closing",
+   opts:["Dari pagi kita bahas ${s}\nSekarang lihat datanya lengkap di dashboard\nArea beli, tren, target analis sudah jelas","Ini bukan soal feeling\nSemua datanya sudah ada\nPertanyaannya: kamu sudah pakai atau belum?"]},
+];
+const AI_TOOLS=[
+  {
+    name:"Claude",cls:"ai-claude",
+    url:"https://claude.ai",
+    icon:"C",
+    prompts:[
+      {label:"Buat Copywriting Hook",
+       text:"Buatkan 3 versi copywriting untuk saham {KODE} dengan angle bahwa saham ini sedang berada di area akumulasi. Gaya: conversational, singkat, cocok untuk Instagram dan Threads. Tiap versi max 3 baris."},
+      {label:"Analisis Fundamental",
+       text:"Jelaskan secara singkat kenapa investor ritel harus memperhatikan kepemilikan saham {KODE} oleh institusi besar. Buat dalam bahasa Indonesia yang mudah dipahami, tidak lebih dari 5 kalimat."},
+      {label:"Ide Konten Mingguan",
+       text:"Bantu saya buat jadwal konten 7 hari untuk saham {KODE} dengan struktur: pagi (hook), siang (value/valuasi), sore (trust/data), malam (closing/CTA). Format tabel singkat."},
+    ]
+  },
+  {
+    name:"ChatGPT",cls:"ai-gpt",
+    url:"https://chatgpt.com",
+    icon:"G",
+    prompts:[
+      {label:"Caption Radar Saham",
+       text:"Buat caption media sosial untuk saham {KODE} yang sedang berada di area nilai historis rendah. Tone: informatif tapi tidak menggurui. Max 4 kalimat. Tambahkan 1 pertanyaan retoris di akhir."},
+      {label:"Thread Twitter/X",
+       text:"Buat thread 5 tweet tentang mengapa memahami kepemilikan saham {KODE} oleh investor besar itu penting bagi investor ritel. Mulai dengan hook yang kuat."},
+      {label:"Script TikTok/Reels",
+       text:"Buat script video pendek 30 detik tentang valuasi saham {KODE} menggunakan kalkulator Graham. Struktur: hook (5 detik) → isi (20 detik) → CTA (5 detik). Gaya: natural, seperti ngobrol."},
+    ]
+  },
+  {
+    name:"Gemini",cls:"ai-gem",
+    url:"https://gemini.google.com",
+    icon:"G",
+    prompts:[
+      {label:"Analisis Sentimen Pasar",
+       text:"Analisis sentimen umum pasar Indonesia terhadap saham {KODE} saat ini. Berikan 3 poin positif dan 2 risiko yang perlu diperhatikan investor ritel. Bahasa Indonesia, singkat."},
+      {label:"Ide Edukasi Konten",
+       text:"Buat outline konten edukasi tentang cara menggunakan Price to Book Value (PBV) untuk menilai apakah saham {KODE} layak dibeli. Target pembaca: investor pemula. Max 5 poin utama."},
+      {label:"Hashtag Strategy",
+       text:"Rekomendasikan 15 hashtag terbaik untuk konten investasi saham Indonesia di Instagram dan TikTok, khususnya untuk konten tentang analisis fundamental dan saham blue chip."},
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let GAS_URL   = localStorage.getItem("gasUrl")||"";
+let LIVE_DATA = null;
+let STATUS    = {}; // rowNum → status
+let CUR_DAY   = 0;
+
+// ═══════════════════════════════════════════════════════
+// DEMO DATA BUILDER
+// ═══════════════════════════════════════════════════════
+function buildDemo(){
+  const rows=[];
+  STOCKS.forEach((s,di)=>{
+    const st=SORE[di];
+    [{t:"08.00",sl:"Radar"},{t:"12.00",sl:"Kalkulator"},{t:"16.00",sl:st},{t:"20.00",sl:"Dashboard"}]
+    .forEach((x,si)=>{
+      rows.push({row:3+di*4+si,day:di+1,date:`Hari ${di+1}`,time:x.t,stock:s,slot:x.sl,
+        label:{Radar:"Hook",Kalkulator:"Value",Dashboard:"Closing"}[x.sl]||"Trust",
+        copy:mkCopy(x.sl,s),link:LINKS[x.sl]||"",status:"Belum",notes:""});
+    });
+  });
+  return rows;
+}
+function mkCopy(sl,s){
+  if(sl==="Radar") return `${s} sekarang ada di area bawah historisnya\nApakah ini peluang akumulasi atau jebakan?`;
+  if(sl==="Kalkulator") return `Nilai wajar ${s} masih di atas harga sekarang\nPotensi upside masih menarik untuk diperhatikan`;
+  if(sl==="Data 1%") return `Yang jarang diperhatikan:\nKepemilikan >1% di ${s} dipegang pemain besar\nIni bukan saham "kosong"`;
+  if(sl==="Insight") return `Banyak orang fokus harga ${s}\nPadahal yang lebih penting:\nposisi dan siapa yang pegang`;
+  if(sl==="Edukasi") return `Sebelum beli ${s}, pahami dulu satu hal ini...\nBanyak yang skip bagian ini`;
+  return `Dari pagi kita sudah bahas ${s}\nLihat data lengkapnya di dashboard sekarang\nArea beli, tren, target — semua ada`;
+}
+function getContent(){ return LIVE_DATA?LIVE_DATA.content:buildDemo(); }
+function getTargets(){ return LIVE_DATA?LIVE_DATA.targets:TARGETS; }
+function getKPIData(){ return LIVE_DATA?LIVE_DATA.kpi:KPI_META.map((k,i)=>({row:4+i,...k,w1:"",w2:"",w3:"",w4:""})); }
+function calcProg(rows){
+  const bd={};
+  rows.forEach(r=>{
+    if(!bd[r.day]) bd[r.day]={total:0,done:0};
+    bd[r.day].total++;
+    if((STATUS[r.row]||r.status)==="Sudah") bd[r.day].done++;
+  });
+  return {doneDays:Object.values(bd).filter(d=>d.done===d.total&&d.total>0).length,byDay:bd};
+}
+
+// ═══════════════════════════════════════════════════════
+// GAS
+// ═══════════════════════════════════════════════════════
+async function gasCall(action,extra={}){
+  if(!GAS_URL) return null;
+  try{
+    const r=await fetch(GAS_URL,{method:"POST",body:JSON.stringify({action,...extra})});
+    return await r.json();
+  }catch(e){return null;}
+}
+async function syncGAS(){
+  if(!GAS_URL){toast("Hubungkan Google Sheet dulu");return;}
+  toast("Sinkronisasi...");
+  const d=await gasCall("getAll");
+  if(d&&d.ok){
+    LIVE_DATA=d;
+    STATUS={};
+    d.content.forEach(r=>{STATUS[r.row]=r.status;});
+    renderAll();
+    document.getElementById("sync-st").textContent="Sync: "+new Date().toLocaleTimeString("id-ID");
+    toast("Data berhasil disinkron dari Google Sheet ✓");
+  } else {
+    toast("Gagal sync — cek URL atau jalankan ulang deployment");
+  }
+}
+function connectGAS(){
+  const u=document.getElementById("gas-url").value.trim();
+  if(!u.startsWith("https://script.google.com")){toast("URL tidak valid");return;}
+  GAS_URL=u; localStorage.setItem("gasUrl",u);
+  document.getElementById("setup-box").style.display="none";
+  const b=document.getElementById("mode-badge");
+  b.className="badge badge-live"; b.textContent="Live — Google Sheet";
+  syncGAS();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════
+function renderAll(){
+  const rows=getContent();
+  const prog=calcProg(rows);
+  const tgts=getTargets();
+  const kpis=getKPIData();
+  renderStats(rows,prog);
+  renderTargetMini(tgts);
+  renderTargetFull(tgts);
+  renderKPISnap(kpis);
+  renderLevelGrid(tgts);
+  renderDayGrid(rows);
+  renderDetail(CUR_DAY,rows);
+  renderKPI(kpis);
+  renderTemplates();
+  renderAI();
+}
+
+function renderStats(rows,prog){
+  const posted=rows.filter(r=>(STATUS[r.row]||r.status)==="Sudah").length;
+  const pct=Math.round(posted/Math.max(rows.length,1)*100);
+  document.getElementById("s-done").textContent=prog.doneDays;
+  document.getElementById("s-slots").textContent=rows.length;
+  document.getElementById("s-post").textContent=posted;
+  document.getElementById("s-pct").textContent=pct+"%";
+  document.getElementById("prog-big").textContent=pct+"%";
+  document.getElementById("prog-fill").style.width=pct+"%";
+  [[1,7],[8,14],[15,21],[22,30]].forEach(([s,e],wi)=>{
+    let dn=0,tot=0;
+    for(let d=s;d<=e;d++){const bd=prog.byDay[d];if(bd){tot++;if(bd.done===bd.total&&bd.total>0)dn++;}}
+    const max=e-s+1,h=Math.max(6,Math.round(dn/max*40));
+    const wb=document.getElementById("wb"+(wi+1)),wc=document.getElementById("wc"+(wi+1));
+    if(wb){wb.style.height=h+"px";wb.className="wk-bar "+(dn===max?"full":dn>0?"part":"");}
+    if(wc) wc.textContent=dn+"/"+max;
+  });
+}
+
+function renderTargetMini(tgts){
+  document.getElementById("tbl-mini").innerHTML=tgts.map(t=>
+    `<tr><td>${t.metric}</td><td class="cr">${t.real}</td><td class="ct">${t.mid}</td><td class="ca">${t.aggr}</td></tr>`
+  ).join("");
+}
+function renderTargetFull(tgts){
+  document.getElementById("tbl-full").innerHTML=tgts.map((t,i)=>
+    `<tr><td>${t.metric}</td><td class="cr">${t.real}</td><td class="ct">${t.mid}</td><td class="ca">${t.aggr}</td>
+     <td><input class="act-in" value="${t.actual||""}" placeholder="isi aktual" onblur="saveActual(${t.row||i+5},this.value)"></td></tr>`
+  ).join("");
+}
+function renderKPISnap(kpis){
+  const el=document.getElementById("kpi-snap");
+  if(!el) return;
+  el.innerHTML=kpis.slice(0,4).map(k=>{
+    const v=k.w4||k.w3||k.w2||k.w1||"—";
+    return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:12px">
+      <span style="color:var(--txt2)">${k.kpi}</span>
+      <span style="font-family:'Space Mono',monospace;color:var(--gold)">${v}</span></div>`;
+  }).join("")+`<div style="font-size:11px;color:var(--txt3);margin-top:10px">Update lengkap di tab KPI Tracker →</div>`;
+}
+
+// Level Grid (Target page)
+function renderLevelGrid(tgts){
+  const el=document.getElementById("lv-grid"); if(!el) return;
+  const levels=[
+    {cls:"lv-r",label:"Realistis — Baseline Aman",key:"real"},
+    {cls:"lv-t",label:"Tengah — Growth Mode",key:"mid"},
+    {cls:"lv-a",label:"Agresif — Push Mode",key:"aggr"},
+  ];
+  el.innerHTML=levels.map(lv=>`
+    <div class="lv ${lv.cls}">
+      <div class="lv-hd">${lv.label}</div>
+      <div class="lv-body">
+        ${tgts.map(t=>`<div class="lv-row"><span class="lv-met">${t.metric}</span><span class="lv-val">${t[lv.key]}</span></div>`).join("")}
+      </div>
+    </div>`).join("");
+}
+
+// ── Day Grid ───────────────────────────────────────────────
+const SLOT_COL={Radar:"var(--hook)",Kalkulator:"var(--value)",Dashboard:"var(--close)"};
+function renderDayGrid(rows){
+  const grid=document.getElementById("day-grid"); if(!grid) return;
+  const byDay={};
+  rows.forEach(r=>{if(!byDay[r.day])byDay[r.day]=[];byDay[r.day].push(r);});
+  grid.innerHTML="";
+  for(let d=1;d<=30;d++){
+    const dr=byDay[d]||[],s=dr[0]?dr[0].stock:STOCKS[d-1];
+    const allDone=dr.length>0&&dr.every(r=>(STATUS[r.row]||r.status)==="Sudah");
+    const chip=document.createElement("div");
+    chip.className="dc"+(allDone?" done":"")+(CUR_DAY===d-1?" on":"");
+    chip.innerHTML=`<div class="dc-n">${d}</div><div class="dc-s">${s}</div>
+      <div class="dc-dots">${dr.map(r=>{
+        const c=SLOT_COL[r.slot]||"var(--trust)";
+        const op=(STATUS[r.row]||r.status)==="Sudah"?"1":"0.3";
+        return `<div class="dc-dot" style="background:${c};opacity:${op}"></div>`;
+      }).join("")}</div>`;
+    chip.addEventListener("click",()=>{CUR_DAY=d-1;renderDayGrid(rows);renderDetail(CUR_DAY,rows);});
+    grid.appendChild(chip);
+  }
+}
+
+// ── Slot Detail ────────────────────────────────────────────
+const BADGE={Radar:"bh",Kalkulator:"bv",Dashboard:"bc"};
+const LABEL={Radar:"Hook",Kalkulator:"Value",Dashboard:"Closing"};
+function renderDetail(di,rows){
+  const panel=document.getElementById("det-panel"); if(!panel) return;
+  const dr=rows.filter(r=>r.day===di+1);
+  if(!dr.length){panel.innerHTML=`<div style="padding:44px;text-align:center;color:var(--txt3);font-size:13px">Pilih hari di atas</div>`;return;}
+  const s=dr[0].stock;
+  const allDone=dr.every(r=>(STATUS[r.row]||r.status)==="Sudah");
+  const flowStr=dr.map(r=>r.slot).join(" → ");
+  panel.innerHTML=`
+    <div class="det-hd">
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <span class="det-stock">${s}</span>
+        <span class="det-day">Hari ${di+1} &nbsp;|&nbsp; ${flowStr}</span>
+      </div>
+      <button class="btn-mark ${allDone?"on":""}" id="btn-mark" onclick="markDay(${di})">
+        ${allDone?"✓ Selesai":"Tandai Selesai"}
+      </button>
+    </div>
+    <div>${dr.map(r=>slotHTML(r)).join("")}</div>`;
+}
+function slotHTML(r){
+  const sta=STATUS[r.row]||r.status||"Belum";
+  const bc=BADGE[r.slot]||"bt";
+  const lbl=LABEL[r.slot]||"Trust";
+  const copyFull=r.copy+(r.link?`\n\n👉 ${r.link}`:"");
+  // share platforms
+  const platforms=[
+    {id:"th",label:"Threads ↗",  direct:true,  url:`https://www.threads.net/intent/post?text=${enc(copyFull)}`},
+    {id:"li",label:"LinkedIn ↗", direct:true,  url:`https://www.linkedin.com/sharing/share-offsite/?url=${enc("https://www.economstock.com")}&summary=${enc(r.copy)}`},
+    {id:"tt",label:"TikTok",     direct:false, url:""},
+    {id:"ig",label:"Instagram",  direct:false, url:""},
+    {id:"sb",label:"Stockbit",   direct:false, url:""},
+  ];
+  // AI prompt share
+  const aiPrompt=`Bantu saya buat copywriting menarik untuk saham ${r.stock} dengan konteks berikut:\n${r.copy}\n\nBuat 3 variasi dengan tone berbeda: (1) informatif, (2) curiosity-driven, (3) data-focused. Cocok untuk Instagram & Threads.`;
+
+  return `<div class="slot-item">
+    <div class="si-time">${r.time}</div>
+    <div class="si-col">
+      <span class="sbadge ${bc}">${r.slot}</span>
+      <div class="si-status">
+        <label>Status:</label>
+        <select onchange="setStatus(${r.row},this.value,${r.day})">
+          ${["Belum","Sudah","Skip"].map(s=>`<option ${s===sta?"selected":""}>${s}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    <div class="si-body">
+      <div class="si-title">${r.stock} — ${lbl}</div>
+      <div class="si-copy">${esc(r.copy)}</div>
+      <div class="si-actions">
+        ${r.link?`<a class="tool-lnk" href="${r.link}" target="_blank" rel="noopener">Buka tool ↗</a>`:""}
+        <div class="share-wrap">
+          <span class="share-lbl">Post:</span>
+          ${platforms.map(p=>`<button class="sb sb-${p.id}" onclick="${p.direct
+            ?`openUrl('${p.url.replace(/'/g,"\\'")}')`
+            :`clipIt(${JSON.stringify(copyFull)},this)`}">${p.label}</button>`).join("")}
+        </div>
+      </div>
+      <div class="ai-bar">
+        <span class="ai-lbl">Bantu AI:</span>
+        <a class="ai-btn ai-claude" href="https://claude.ai" target="_blank" rel="noopener" onclick="clipIt(${JSON.stringify(aiPrompt)},this)">Claude</a>
+        <a class="ai-btn ai-gpt"    href="https://chatgpt.com" target="_blank" rel="noopener" onclick="clipIt(${JSON.stringify(aiPrompt)},this)">ChatGPT</a>
+        <a class="ai-btn ai-gem"    href="https://gemini.google.com" target="_blank" rel="noopener" onclick="clipIt(${JSON.stringify(aiPrompt)},this)">Gemini</a>
+        <span style="font-size:10px;color:var(--txt3);margin-left:4px">(prompt tersalin otomatis)</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function setStatus(rowNum,status,day){
+  STATUS[rowNum]=status;
+  const rows=getContent();
+  const r=rows.find(x=>x.row===rowNum); if(r) r.status=status;
+  renderDayGrid(rows); renderStats(rows,calcProg(rows));
+  if(GAS_URL) await gasCall("updateStatus",{row:rowNum,status});
+  toast("Status diperbarui"+(GAS_URL?" ke Google Sheet":""));
+}
+
+async function markDay(di){
+  const rows=getContent();
+  const dr=rows.filter(r=>r.day===di+1);
+  const allDone=dr.every(r=>(STATUS[r.row]||r.status)==="Sudah");
+  const nst=allDone?"Belum":"Sudah";
+  for(const r of dr){
+    STATUS[r.row]=nst; r.status=nst;
+    if(GAS_URL) await gasCall("updateStatus",{row:r.row,status:nst});
+  }
+  renderDayGrid(rows); renderDetail(di,rows); renderStats(rows,calcProg(rows));
+  toast(nst==="Sudah"?"Hari ditandai selesai ✓":"Hari direset");
+}
+
+async function saveActual(rowNum,val){
+  if(!GAS_URL){toast("Mode demo — update langsung di Google Sheet");return;}
+  await gasCall("updateActual",{row:rowNum,value:val});
+  toast("Aktual disimpan ke Google Sheet ✓");
+}
+
+// ── KPI ────────────────────────────────────────────────────
+function renderKPI(kpis){
+  const grid=document.getElementById("kpi-grid"); if(!grid) return;
+  const meta=KPI_META;
+  grid.innerHTML=kpis.map((k,i)=>{
+    const m=meta[i]||{};
+    return `<div class="kpi-card">
+      <div class="kpi-top">
+        <div class="kpi-name">${k.kpi||m.kpi||""}</div>
+        <div class="kpi-tags">
+          <span class="kpi-min">Min: ${m.min||"—"}</span>
+          <span class="kpi-good">Bagus: ${m.good||"—"}</span>
+        </div>
+      </div>
+      <div class="kpi-weeks">
+        ${[1,2,3,4].map(w=>`<div>
+          <div class="kw-lbl">Mg ${w}</div>
+          <input class="kw-in" value="${k["w"+w]||""}" placeholder="—"
+            onblur="saveKPI(${k.row||0},${w},this.value)">
+        </div>`).join("")}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function saveKPI(rowNum,week,val){
+  if(!GAS_URL||!rowNum){toast("Mode demo — connect Google Sheet untuk simpan");return;}
+  await gasCall("updateKPI",{row:rowNum,week,value:val});
+  toast("KPI Minggu "+week+" disimpan ✓");
+}
+
+// ── Templates ───────────────────────────────────────────────
+function renderTemplates(){
+  const grid=document.getElementById("tmpl-grid"); if(!grid) return;
+  grid.innerHTML=TEMPLATES.map(t=>`
+    <div class="tmpl-card">
+      <div class="tmpl-hd">
+        <span class="sbadge ${t.badge}">${t.slot}</span>
+        <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--txt3)">${t.time}</span>
+        <span style="font-size:11px;color:var(--txt3);margin-left:4px">— ${t.badgeTxt}</span>
+      </div>
+      <div class="tmpl-body">
+        ${t.opts.map((o,oi)=>`
+          <div class="tmpl-opt">
+            <div class="tmpl-opt-lbl">Opsi ${oi+1}</div>
+            <button class="cp-btn" onclick="clipIt(${JSON.stringify(o)},this)">Salin</button>
+            <div class="tmpl-txt">${esc(o)}</div>
+          </div>`).join("")}
+      </div>
+    </div>`).join("");
+}
+
+// ── AI Tools Page ────────────────────────────────────────────
+function renderAI(){
+  const el=document.getElementById("ai-cards"); if(!el) return;
+  el.innerHTML=AI_TOOLS.map(tool=>`
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-hd">
+        <div class="card-ttl"><a class="${tool.cls} ai-btn" href="${tool.url}" target="_blank" rel="noopener" style="font-size:13px;padding:4px 14px">${tool.name} ↗</a>&nbsp;&nbsp;${tool.name} — Prompt Siap Pakai</div>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;gap:10px">
+          ${tool.prompts.map(p=>`
+            <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:12px 14px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <span style="font-size:12px;font-weight:600;color:var(--txt)">${p.label}</span>
+                <div style="display:flex;gap:6px">
+                  <button class="cp-btn" onclick="clipIt(${JSON.stringify(p.text)},this)" style="position:static">Salin Prompt</button>
+                  <a class="ai-btn ${tool.cls}" href="${tool.url}" target="_blank" rel="noopener" style="font-size:10px;padding:2px 10px" onclick="clipIt(${JSON.stringify(p.text)},this)">Buka ${tool.name}</a>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--txt2);line-height:1.7;font-family:'Space Mono',monospace;white-space:pre-wrap;background:var(--bg);border-radius:6px;padding:8px 10px;border:1px solid var(--bdr)">${esc(p.text)}</div>
+            </div>`).join("")}
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function enc(s){return encodeURIComponent(s)}
+function openUrl(u){window.open(u,"_blank","noopener")}
+function clipIt(txt,btn){
+  const s=typeof txt==="string"?txt.replace(/\\n/g,"\n"):txt;
+  const copy=()=>{
+    if(navigator.clipboard) return navigator.clipboard.writeText(s);
+    const ta=document.createElement("textarea");ta.value=s;document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);return Promise.resolve();
+  };
+  copy().then(()=>{
+    if(!btn) return;
+    const orig=btn.textContent; btn.textContent="Tersalin!"; btn.classList.add("ok");
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove("ok");},1800);
+  });
+}
+function toast(msg){
+  const t=document.getElementById("toast");t.textContent=msg;t.classList.add("on");
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("on"),2600);
+}
+function goNav(el){
+  document.querySelectorAll(".nv").forEach(n=>n.classList.remove("on"));
+  el.classList.add("on");
+  const p=el.dataset.p;
+  document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
+  document.getElementById("pane-"+p).classList.add("on");
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener("DOMContentLoaded",async()=>{
+  if(GAS_URL){
+    document.getElementById("gas-url").value=GAS_URL;
+    document.getElementById("setup-box").style.display="none";
+    const b=document.getElementById("mode-badge");
+    b.className="badge badge-live";b.textContent="Live — Google Sheet";
+  }
+  // pre-fill demo
+  buildDemo().forEach(r=>{STATUS[r.row]=r.status;});
+  renderAll();
+  document.getElementById("loader").style.display="none";
+
+  if(GAS_URL){
+    document.getElementById("load-txt").textContent="Sync Google Sheet...";
+    document.getElementById("loader").style.display="flex";
+    await syncGAS();
+    document.getElementById("loader").style.display="none";
+  }
+});
+</script>
+</body>
+</html>
