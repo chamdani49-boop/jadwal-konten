@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(242, 160, 7, 0.08), transparent 60%),
+    radial-gradient(900px 600px at -10% 20%, rgba(59, 130, 246, 0.06), transparent 60%),
+    #07090F;
+  color: #D7DEEA;
+  min-height: 100vh;
+}
+
+/* Number ticker font */
+.num {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Scrollbar styling */
+*::-webkit-scrollbar { height: 8px; width: 8px; }
+*::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 4px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.16); }
+
+/* Card hover */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+}
+.card:hover { border-color: rgba(255,255,255,0.10); }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+  color: #A3AFC5;
+}
+
+.chip-live { color:#22C55E; border-color: rgba(34,197,94,.30); background: rgba(34,197,94,.08); }
+.chip-warn { color:#F2A007; border-color: rgba(242,160,7,.30); background: rgba(242,160,7,.08); }
+.chip-bad  { color:#EF4444; border-color: rgba(239,68,68,.30); background: rgba(239,68,68,.08); }
+
+.dot { width:8px; height:8px; border-radius:50%; background: currentColor; }
