@@ -6,59 +6,78 @@ type Item =
   | { ok: true; symbol: string; idr: number; usd: number; source: string; fetchedAt: string }
   | { ok: false; symbol: string; error: string };
 
-const COIN_COLOR: Record<string, string> = {
-  BTC: "#F7931A",
-  ETH: "#627EEA",
-  BNB: "#F3BA2F",
-  SOL: "#9945FF",
-  USDT: "#22C55E",
-  XRP: "#0084D1",
-  ADA: "#0033AD",
+const COIN: Record<string, { color: string; name: string }> = {
+  BTC: { color: "#F7931A", name: "Bitcoin" },
+  ETH: { color: "#627EEA", name: "Ethereum" },
+  BNB: { color: "#F3BA2F", name: "BNB" },
+  SOL: { color: "#9945FF", name: "Solana" },
+  USDT: { color: "#26A17B", name: "Tether" },
+  XRP: { color: "#0084D1", name: "XRP" },
+  ADA: { color: "#0033AD", name: "Cardano" },
 };
 
 export default function CryptoStrip({ items }: { items: Item[] }) {
   return (
-    <div className="card p-4 sm:p-5 md:p-6">
-      <div className="flex items-start sm:items-center justify-between gap-2 mb-3 sm:mb-4 flex-wrap">
-        <div className="min-w-0">
-          <div className="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase">
-            Kripto → IDR
-          </div>
-          <div className="text-ink-100 text-sm sm:text-base font-semibold mt-0.5">Harga live</div>
+    <section>
+      <div className="flex items-end justify-between gap-3 mb-4 sm:mb-5">
+        <div>
+          <div className="eyebrow mb-1.5">Crypto · IDR</div>
+          <h2 className="text-fg text-lg sm:text-xl font-medium tracking-tight">
+            Live spot prices
+          </h2>
         </div>
-        <span className="chip shrink-0">jsDelivr (no-key)</span>
+        <span className="chip text-fg-dim hidden sm:inline-flex">jsDelivr · no-key</span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2">
-        {items.map((it, i) => (
-          <div
-            key={i}
-            className="rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0"
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ background: COIN_COLOR[it.symbol] ?? "#A3AFC5" }}
-              />
-              <span className="text-ink-300 text-xs font-semibold truncate">
-                {it.symbol}
-              </span>
-            </div>
-            {it.ok ? (
-              <>
-                <div className="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">
-                  Rp {formatIDR(it.idr)}
-                </div>
-                <div className="num text-ink-500 text-[10px] sm:text-[11px] mt-0.5 truncate">
-                  ${formatNumber(it.usd, 2)}
-                </div>
-              </>
-            ) : (
-              <div className="text-accent-red text-xs mt-1.5">ERR</div>
-            )}
+      {/* Mobile: horizontal scroll */}
+      <div className="-mx-4 sm:mx-0 sm:hidden">
+        <div className="no-scrollbar overflow-x-auto px-4">
+          <div className="flex gap-2 min-w-max pb-1">
+            {items.map((it, i) => <CoinCard key={i} it={it} />)}
           </div>
-        ))}
+        </div>
       </div>
+
+      {/* Desktop: grid */}
+      <div className="hidden sm:grid grid-cols-3 md:grid-cols-5 gap-2">
+        {items.map((it, i) => <CoinCard key={i} it={it} />)}
+      </div>
+    </section>
+  );
+}
+
+function CoinCard({ it }: { it: Item }) {
+  const meta = COIN[it.symbol] ?? { color: "#9BA1AC", name: it.symbol };
+  return (
+    <div className="rounded-lg border border-line bg-bg-900/50 hover:border-line-strong hover:bg-bg-850 transition-colors px-3 py-3 min-w-[150px]">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span
+          className="w-5 h-5 rounded-full grid place-items-center text-[9px] font-bold text-white shrink-0"
+          style={{ background: meta.color }}
+        >
+          {it.symbol[0]}
+        </span>
+        <div className="min-w-0">
+          <div className="text-fg text-xs font-semibold leading-tight">
+            {it.symbol}
+          </div>
+          <div className="text-fg-dim text-[10px] truncate leading-tight">
+            {meta.name}
+          </div>
+        </div>
+      </div>
+      {it.ok ? (
+        <>
+          <div className="num text-fg text-sm truncate">
+            Rp {formatIDR(it.idr)}
+          </div>
+          <div className="num text-fg-dim text-[11px] truncate">
+            ${formatNumber(it.usd, 2)}
+          </div>
+        </>
+      ) : (
+        <div className="text-down text-xs num">— ERR</div>
+      )}
     </div>
   );
 }

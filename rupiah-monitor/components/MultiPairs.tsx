@@ -3,20 +3,16 @@
 import { formatIDR, formatNumber } from "@/lib/format";
 
 const FLAGS: Record<string, string> = {
-  USD: "🇺🇸",
-  EUR: "🇪🇺",
-  GBP: "🇬🇧",
-  JPY: "🇯🇵",
-  SGD: "🇸🇬",
-  MYR: "🇲🇾",
-  CNY: "🇨🇳",
-  AUD: "🇦🇺",
-  KRW: "🇰🇷",
-  THB: "🇹🇭",
-  HKD: "🇭🇰",
-  CHF: "🇨🇭",
-  IDR: "🇮🇩",
-  SAR: "🇸🇦",
+  USD: "🇺🇸", EUR: "🇪🇺", GBP: "🇬🇧", JPY: "🇯🇵", SGD: "🇸🇬",
+  MYR: "🇲🇾", CNY: "🇨🇳", AUD: "🇦🇺", KRW: "🇰🇷", THB: "🇹🇭",
+  HKD: "🇭🇰", CHF: "🇨🇭", IDR: "🇮🇩", SAR: "🇸🇦",
+};
+
+const NAMES: Record<string, string> = {
+  USD: "US Dollar", EUR: "Euro", GBP: "British Pound", JPY: "Japanese Yen",
+  SGD: "Singapore Dollar", MYR: "Malaysian Ringgit", CNY: "Chinese Yuan",
+  AUD: "Australian Dollar", KRW: "Korean Won", THB: "Thai Baht",
+  HKD: "Hong Kong Dollar", CHF: "Swiss Franc", IDR: "Indonesian Rupiah",
 };
 
 export default function MultiPairs({
@@ -32,51 +28,85 @@ export default function MultiPairs({
 }) {
   const entries = Object.entries(quotes).filter(([k]) => k !== base);
   return (
-    <div className="card p-4 sm:p-5 md:p-6">
-      <div className="flex items-start sm:items-center justify-between gap-2 mb-3 sm:mb-4 flex-wrap">
-        <div className="min-w-0">
-          <div className="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase">
-            Mata Uang Lain
-          </div>
-          <div className="text-ink-100 text-sm sm:text-base font-semibold mt-0.5">
-            1 {base} = …
-          </div>
+    <section>
+      <div className="flex items-end justify-between gap-3 mb-4 sm:mb-5">
+        <div>
+          <div className="eyebrow mb-1.5">Other currencies</div>
+          <h2 className="text-fg text-lg sm:text-xl font-medium tracking-tight">
+            1 {base} converts to
+          </h2>
         </div>
-        <span className="chip shrink-0">Klik untuk fokus</span>
+        <span className="chip hidden sm:inline-flex text-fg-dim">Tap to focus</span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2">
-        {entries.map(([code, val]) => {
-          const isActive = code === active;
-          return (
-            <button
-              key={code}
-              onClick={() => onPick(code)}
-              className={`text-left rounded-xl border px-2.5 sm:px-3 py-2.5 sm:py-3 transition min-w-0 ${
-                isActive
-                  ? "border-accent-gold/40 bg-accent-gold/5"
-                  : "border-line bg-bg-800/40 hover:border-line-strong"
-              }`}
-            >
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-base shrink-0">{FLAGS[code] ?? "🏳️"}</span>
-                <span
-                  className={`text-xs font-semibold truncate ${
-                    isActive ? "text-accent-gold" : "text-ink-300"
-                  }`}
-                >
-                  {code}
-                </span>
-              </div>
-              <div className="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">
-                {code === "IDR"
-                  ? `Rp ${formatIDR(val)}`
-                  : formatNumber(val, 4)}
-              </div>
-            </button>
-          );
-        })}
+      {/* Horizontal scroll ticker on mobile, grid on desktop */}
+      <div className="-mx-4 sm:mx-0 sm:hidden">
+        <div className="no-scrollbar overflow-x-auto px-4">
+          <div className="flex gap-2 min-w-max pb-1">
+            {entries.map(([code, val]) => (
+              <PairButton
+                key={code}
+                code={code}
+                val={val}
+                active={code === active}
+                onPick={onPick}
+              />
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+
+      <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+        {entries.map(([code, val]) => (
+          <PairButton
+            key={code}
+            code={code}
+            val={val}
+            active={code === active}
+            onPick={onPick}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PairButton({
+  code,
+  val,
+  active,
+  onPick,
+}: {
+  code: string;
+  val: number;
+  active: boolean;
+  onPick: (q: string) => void;
+}) {
+  return (
+    <button
+      onClick={() => onPick(code)}
+      className={`text-left rounded-lg border px-3 py-3 transition-colors min-w-[140px] ${
+        active
+          ? "border-gold/40 bg-gold/[0.04]"
+          : "border-line bg-bg-900/50 hover:border-line-strong hover:bg-bg-850"
+      }`}
+    >
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-base shrink-0">{FLAGS[code] ?? "🏳️"}</span>
+        <span
+          className={`text-xs font-semibold ${
+            active ? "text-gold" : "text-fg-muted"
+          }`}
+        >
+          {code}
+        </span>
+        <span className="text-fg-dim text-[10px] truncate hidden sm:inline">
+          {NAMES[code] ?? ""}
+        </span>
+      </div>
+      <div className="num text-fg text-sm truncate">
+        {code === "IDR" ? formatIDR(val) : formatNumber(val, 4)}
+      </div>
+    </button>
   );
 }

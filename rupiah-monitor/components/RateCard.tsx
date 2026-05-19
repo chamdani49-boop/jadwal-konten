@@ -10,90 +10,117 @@ type Props = {
   min?: number;
   max?: number;
   loading?: boolean;
+  spark?: { date: string; rate: number }[];
+};
+
+const FLAG: Record<string, string> = {
+  USD: "🇺🇸", EUR: "🇪🇺", GBP: "🇬🇧", JPY: "🇯🇵", SGD: "🇸🇬",
+  MYR: "🇲🇾", CNY: "🇨🇳", AUD: "🇦🇺", IDR: "🇮🇩", KRW: "🇰🇷", THB: "🇹🇭",
 };
 
 export default function RateCard({
-  base,
-  quote,
-  current,
-  prev,
-  min,
-  max,
-  loading,
+  base, quote, current, prev, min, max, loading, spark,
 }: Props) {
   const change = current && prev ? pct(prev, current) : 0;
   const up = change >= 0;
+  const diff = current && prev ? current - prev : 0;
+
+  // ghost sparkline
+  const sparkPath = (() => {
+    if (!spark || spark.length < 2) return "";
+    const w = 600, h = 100, pad = 4;
+    const xs = spark.map((_, i) => (i / (spark.length - 1)) * (w - pad * 2) + pad);
+    const ys = spark.map((p) => p.rate);
+    const lo = Math.min(...ys), hi = Math.max(...ys);
+    const range = hi - lo || 1;
+    const yScale = (v: number) => h - pad - ((v - lo) / range) * (h - pad * 2);
+    return spark
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${xs[i].toFixed(2)} ${yScale(p.rate).toFixed(2)}`)
+      .join(" ");
+  })();
 
   return (
-    <div className="card p-5 sm:p-6 md:p-7 animate-fadeUp shadow-card">
-      <div className="flex items-start sm:items-center justify-between gap-3 mb-3">
-        <div className="min-w-0">
-          <div className="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase">
-            Kurs Acuan
-          </div>
-          <div className="text-ink-100 text-sm sm:text-base font-semibold mt-0.5">
-            1 {base} <span className="text-ink-400">→</span> {quote}
-          </div>
-        </div>
-        <div
-          className={`chip shrink-0 ${up ? "chip-live" : "chip-bad"}`}
-          title="Perubahan vs penutupan kemarin"
+    <section className="relative overflow-hidden">
+      {/* Ghost sparkline backdrop */}
+      {sparkPath && (
+        <svg
+          viewBox="0 0 600 100"
+          preserveAspectRatio="none"
+          className="absolute inset-x-0 bottom-0 w-full h-32 sm:h-40 pointer-events-none opacity-[0.18]"
+          aria-hidden
         >
-          {up ? "▲" : "▼"} {formatNumber(Math.abs(change), 2)}%
+          <defs>
+            <linearGradient id="ghostFill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={up ? "#3FCF8E" : "#FF5C5C"} stopOpacity="0.55" />
+              <stop offset="100%" stopColor={up ? "#3FCF8E" : "#FF5C5C"} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={`${sparkPath} L 600 100 L 0 100 Z`} fill="url(#ghostFill)" />
+          <path d={sparkPath} fill="none" stroke={up ? "#3FCF8E" : "#FF5C5C"} strokeWidth="1.5" />
+        </svg>
+      )}
+
+      <div className="relative pt-4 sm:pt-8 pb-8 sm:pb-12 animate-fadeUp">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <span className="text-base sm:text-lg leading-none">{FLAG[base] ?? "🏳️"}</span>
+          <span className="eyebrow">{base}/{quote} · Spot Rate</span>
+        </div>
+
+        <div className="flex items-baseline flex-wrap gap-x-3 sm:gap-x-5 gap-y-2">
+          <span className="text-fg-subtle num text-base sm:text-xl">
+            1 {base} =
+          </span>
+          <h1 className="hero-number text-fg text-[clamp(3rem,12vw,8rem)] break-all">
+            {loading
+              ? "—"
+              : quote === "IDR"
+              ? formatIDR(current ?? NaN)
+              : formatNumber(current ?? NaN, 4)}
+          </h1>
+          <span className="text-fg-muted num text-base sm:text-2xl">{quote}</span>
+        </div>
+
+        <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-4 sm:mt-5">
+          <span
+            className={`inline-flex items-center gap-1.5 num text-sm sm:text-base font-medium ${
+              up ? "text-up" : "text-down"
+            }`}
+          >
+            <span className="text-base">{up ? "↑" : "↓"}</span>
+            {quote === "IDR" ? formatIDR(Math.abs(diff)) : formatNumber(Math.abs(diff), 4)}
+            <span className="text-fg-subtle font-normal text-xs sm:text-sm">
+              ({up ? "+" : "−"}{Math.abs(change).toFixed(2)}%)
+            </span>
+          </span>
+          <span className="text-fg-dim text-xs">vs. previous close</span>
+        </div>
+
+        <div className="mt-6 sm:mt-8 grid grid-cols-3 max-w-md gap-x-6 sm:gap-x-8">
+          <Stat label="High" value={max} quote={quote} />
+          <Stat label="Median" value={current} quote={quote} accent />
+          <Stat label="Low" value={min} quote={quote} />
         </div>
       </div>
-
-      <div className="num text-ink-100 leading-none mt-2 break-all text-[clamp(2rem,9vw,4rem)] sm:text-[clamp(2.25rem,6vw,4.25rem)]">
-        {loading
-          ? "—"
-          : quote === "IDR"
-          ? `Rp ${formatIDR(current ?? NaN)}`
-          : formatNumber(current ?? NaN, 4)}
-      </div>
-
-      <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mt-5 sm:mt-6">
-        <Stat label="Tertinggi" labelLg="Tertinggi (sumber)" value={max} quote={quote} />
-        <Stat label="Median" labelLg="Median agregat" value={current} quote={quote} highlight />
-        <Stat label="Terendah" labelLg="Terendah (sumber)" value={min} quote={quote} />
-      </div>
-    </div>
+    </section>
   );
 }
 
 function Stat({
-  label,
-  labelLg,
-  value,
-  quote,
-  highlight,
+  label, value, quote, accent,
 }: {
   label: string;
-  labelLg: string;
   value?: number;
   quote: string;
-  highlight?: boolean;
+  accent?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-xl border px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0 ${
-        highlight
-          ? "border-accent-gold/30 bg-accent-gold/5"
-          : "border-line bg-bg-800/40"
-      }`}
-    >
-      <div className="text-ink-400 text-[9px] sm:text-[10px] tracking-[0.14em] sm:tracking-[0.16em] uppercase truncate">
-        <span className="sm:hidden">{label}</span>
-        <span className="hidden sm:inline">{labelLg}</span>
-      </div>
-      <div
-        className={`num mt-1 text-xs sm:text-sm md:text-base truncate ${
-          highlight ? "text-accent-gold" : "text-ink-200"
-        }`}
-      >
+    <div className="min-w-0">
+      <div className="eyebrow mb-1">{label}</div>
+      <div className={`num text-sm sm:text-base truncate ${accent ? "text-gold" : "text-fg-muted"}`}>
         {value === undefined
           ? "—"
           : quote === "IDR"
-          ? `Rp ${formatIDR(value)}`
+          ? formatIDR(value)
           : formatNumber(value)}
       </div>
     </div>
