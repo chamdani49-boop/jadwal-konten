@@ -37,24 +37,24 @@ export default function RateChart({
 
   return (
     <div className="card p-5 md:p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <div className="text-ink-400 text-[11px] tracking-[0.18em] uppercase">
+      <div className="flex items-start sm:items-center justify-between gap-2 mb-3 sm:mb-4 flex-wrap">
+        <div className="min-w-0">
+          <div className="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase">
             Pergerakan Historis
           </div>
-          <div className="text-ink-100 font-semibold mt-0.5">
+          <div className="text-ink-100 text-sm sm:text-base font-semibold mt-0.5">
             {base}/{quote} —{" "}
             <span className="text-ink-400">{data?.length ?? 0} hari</span>
           </div>
         </div>
-        <div className={`chip ${up ? "chip-live" : "chip-bad"}`}>
+        <div className={`chip shrink-0 ${up ? "chip-live" : "chip-bad"}`}>
           {up ? "▲" : "▼"} {Math.abs(change).toFixed(2)}%
         </div>
       </div>
 
-      <div className="h-[260px] -ml-2">
+      <div className="h-[200px] sm:h-[240px] md:h-[260px] -ml-2 -mr-2 sm:mr-0">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
+          <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" stopColor="#F2A007" stopOpacity={0.45} />
@@ -64,17 +64,17 @@ export default function RateChart({
             <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
             <XAxis
               dataKey="date"
-              tick={{ fill: "#6E7B95", fontSize: 11 }}
+              tick={{ fill: "#6E7B95", fontSize: 10 }}
               tickLine={false}
               axisLine={false}
-              minTickGap={24}
+              minTickGap={32}
             />
             <YAxis
-              tick={{ fill: "#6E7B95", fontSize: 11 }}
+              tick={{ fill: "#6E7B95", fontSize: 10 }}
               tickLine={false}
               axisLine={false}
               domain={["auto", "auto"]}
-              width={70}
+              width={56}
               tickFormatter={(v) =>
                 quote === "IDR"
                   ? new Intl.NumberFormat("id-ID", {

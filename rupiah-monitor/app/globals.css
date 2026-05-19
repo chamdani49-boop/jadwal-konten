@@ -4,6 +4,17 @@
 
 :root {
   color-scheme: dark;
+  /* iOS notch / Android gesture bar */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -14,6 +25,24 @@ body {
     #07090F;
   color: #D7DEEA;
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Make all interactive elements at least 40px tall on mobile (touch friendly) */
+@media (max-width: 640px) {
+  button, [role="button"] {
+    min-height: 40px;
+  }
+}
+
+/* Prevent iOS zoom on input focus */
+input, select, textarea {
+  font-size: 16px;
+}
+@media (min-width: 640px) {
+  input, select, textarea {
+    font-size: inherit;
+  }
 }
 
 /* Number ticker font */
@@ -43,6 +72,16 @@ body {
   border: 1px solid rgba(255,255,255,0.10);
   background: rgba(255,255,255,0.03);
   color: #A3AFC5;
+  white-space: nowrap;
+}
+
+/* Hide scrollbars on horizontal scroll regions while keeping scroll usable */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 .chip-live { color:#22C55E; border-color: rgba(34,197,94,.30); background: rgba(34,197,94,.08); }

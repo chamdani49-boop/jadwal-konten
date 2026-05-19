@@ -1,11 +1,21 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
   title: "Rupiah Monitor — Realtime Market Tracker",
   description:
     "Monitor kurs Rupiah realtime (USD, EUR, JPY, SGD, MYR, dll) + crypto. Dark theme. Multi-source aggregation, anti-blokir & anti-limit.",
   icons: { icon: "/favicon.svg" },
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#07090F",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({
