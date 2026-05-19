@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
+<meta name="theme-color" content="#07090F" />
+<title>Rupiah Monitor — Preview (Static Mockup)</title>
+
+<!-- Tailwind via CDN (preview saja, app asli pakai build) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          bg:   { DEFAULT:"#07090F", 900:"#0B0E17", 800:"#11151F", 700:"#181D2A", 600:"#222838" },
+          line: { DEFAULT:"rgba(255,255,255,0.06)", strong:"rgba(255,255,255,0.12)" },
+          ink:  { 100:"#F4F7FB", 200:"#D7DEEA", 300:"#A3AFC5", 400:"#6E7B95", 500:"#3F4B66" },
+          accent: { green:"#22C55E", red:"#EF4444", gold:"#F2A007", blue:"#3B82F6" }
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(242,160,7,.08), transparent 60%),
+      radial-gradient(900px 600px at -10% 20%, rgba(59,130,246,.06), transparent 60%),
+      #07090F;
+    color:#D7DEEA; min-height:100vh; font-family: Outfit, ui-sans-serif, system-ui, sans-serif;
+  }
+  .num { font-family:"Space Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums; letter-spacing:-0.01em; }
+  .card { background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+          border:1px solid rgba(255,255,255,.06); border-radius:16px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px;
+          font-size:11px; font-weight:600; border:1px solid rgba(255,255,255,.10);
+          background:rgba(255,255,255,.03); color:#A3AFC5; white-space:nowrap; }
+  .chip-live { color:#22C55E; border-color:rgba(34,197,94,.30); background:rgba(34,197,94,.08); }
+  .chip-bad  { color:#EF4444; border-color:rgba(239,68,68,.30); background:rgba(239,68,68,.08); }
+  .dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+  @keyframes pulseDot {0%,100%{opacity:1; transform:scale(1)} 50%{opacity:.4; transform:scale(1.3)}}
+  .animate-pulseDot { animation: pulseDot 1.6s ease-in-out infinite; }
+  .no-scrollbar { scrollbar-width:none; }
+  .no-scrollbar::-webkit-scrollbar { display:none; }
+  @media (max-width:640px) { button, [role="button"] { min-height:40px; } }
+
+  /* preview-only: device frames */
+  .device-bar {
+    display:flex; gap:8px; padding:12px; flex-wrap:wrap;
+    border-bottom:1px solid rgba(255,255,255,.06);
+    background:rgba(0,0,0,0.2); position:sticky; top:0; z-index:10; backdrop-filter:blur(8px);
+  }
+  .device-bar button {
+    border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03);
+    padding:6px 12px; border-radius:10px; font-size:12px; color:#A3AFC5; cursor:pointer;
+  }
+  .device-bar button.active { color:#F2A007; border-color: rgba(242,160,7,.35); background: rgba(242,160,7,.08); }
+  .device-frame {
+    margin: 18px auto; transition: max-width .25s ease;
+    border-radius: 18px; overflow: hidden; outline: 1px solid rgba(255,255,255,.06);
+  }
+</style>
+</head>
+<body>
+
+<!-- Toolbar buat ganti viewport -->
+<div class="device-bar">
+  <span class="text-ink-300 text-[11px] tracking-[0.18em] uppercase pr-2 self-center">Preview di:</span>
+  <button data-w="375" class="active">Mobile (375)</button>
+  <button data-w="430">Pro Max (430)</button>
+  <button data-w="768">Tablet (768)</button>
+  <button data-w="1024">Laptop (1024)</button>
+  <button data-w="1440">Desktop (1440)</button>
+  <span class="text-ink-500 text-[11px] self-center pl-2">Klik untuk ganti — semua data di bawah adalah dummy/mock</span>
+</div>
+
+<div id="frame" class="device-frame" style="max-width:375px;">
+<!-- ============ APP STARTS ============ -->
+<div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 md:py-12">
+
+  <!-- HEADER -->
+  <header class="flex items-start sm:items-center justify-between gap-3 mb-6 sm:mb-8 flex-wrap">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-bg-800 border border-line grid place-items-center shrink-0">
+        <span class="num text-accent-gold font-bold text-lg">Rp</span>
+      </div>
+      <div class="min-w-0">
+        <div class="text-ink-100 font-bold text-base sm:text-lg leading-tight truncate">
+          Rupiah <span class="text-accent-gold">Monitor</span>
+        </div>
+        <div class="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.16em] sm:tracking-[0.18em] uppercase mt-0.5 truncate">
+          Realtime Market Dashboard
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end">
+      <span class="chip chip-live"><span class="dot animate-pulseDot"></span>LIVE</span>
+      <span class="chip">5/5 sumber</span>
+      <span class="chip text-ink-400">3 detik lalu</span>
+    </div>
+  </header>
+
+  <!-- SELECTOR (scrollable on mobile) -->
+  <div class="-mx-4 sm:mx-0 mb-5 sm:mb-6">
+    <div class="no-scrollbar overflow-x-auto px-4 sm:px-0">
+      <div class="flex items-center gap-2 min-w-max">
+        <span class="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase mr-1">Base</span>
+        <button class="px-3 py-2 rounded-lg border border-accent-gold/40 bg-accent-gold/10 text-accent-gold text-xs font-semibold shrink-0">USD</button>
+        <button class="px-3 py-2 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold shrink-0">EUR</button>
+        <button class="px-3 py-2 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold shrink-0">SGD</button>
+        <button class="px-3 py-2 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold shrink-0">JPY</button>
+        <button class="px-3 py-2 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold shrink-0">CNY</button>
+        <button class="px-3 py-2 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold shrink-0">MYR</button>
+        <button class="px-3 py-2 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold shrink-0">GBP</button>
+        <span class="mx-1 text-ink-500 shrink-0">/</span>
+        <span class="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase mr-1">Quote</span>
+        <button class="px-3 py-2 rounded-lg border border-accent-gold/40 bg-accent-gold/10 text-accent-gold text-xs font-semibold shrink-0">IDR</button>
+        <button class="px-3 py-2 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold shrink-0">USD</button>
+        <button class="px-3 py-2 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold shrink-0">SGD</button>
+        <button class="px-3 py-2 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold shrink-0">MYR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RATE + CONVERTER -->
+  <div class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-3 sm:gap-4 md:gap-5 mb-4 sm:mb-5">
+    <!-- RateCard -->
+    <div class="card p-5 sm:p-6 md:p-7">
+      <div class="flex items-start sm:items-center justify-between gap-3 mb-3">
+        <div class="min-w-0">
+          <div class="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase">Kurs Acuan</div>
+          <div class="text-ink-100 text-sm sm:text-base font-semibold mt-0.5">1 USD <span class="text-ink-400">&rarr;</span> IDR</div>
+        </div>
+        <div class="chip chip-bad shrink-0">&#9660; 0.12%</div>
+      </div>
+
+      <div class="num text-ink-100 leading-none mt-2 break-all" style="font-size:clamp(2rem,9vw,4rem);">Rp 17.352</div>
+
+      <div class="grid grid-cols-3 gap-1.5 sm:gap-2 mt-5 sm:mt-6">
+        <div class="rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="text-ink-400 text-[9px] sm:text-[10px] tracking-[0.14em] sm:tracking-[0.16em] uppercase truncate">
+            <span class="sm:hidden">Tertinggi</span>
+            <span class="hidden sm:inline">Tertinggi (sumber)</span>
+          </div>
+          <div class="num mt-1 text-xs sm:text-sm md:text-base text-ink-200 truncate">Rp 17.371</div>
+        </div>
+        <div class="rounded-xl border border-accent-gold/30 bg-accent-gold/5 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="text-ink-400 text-[9px] sm:text-[10px] tracking-[0.14em] sm:tracking-[0.16em] uppercase truncate">
+            <span class="sm:hidden">Median</span>
+            <span class="hidden sm:inline">Median agregat</span>
+          </div>
+          <div class="num mt-1 text-xs sm:text-sm md:text-base text-accent-gold truncate">Rp 17.352</div>
+        </div>
+        <div class="rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="text-ink-400 text-[9px] sm:text-[10px] tracking-[0.14em] sm:tracking-[0.16em] uppercase truncate">
+            <span class="sm:hidden">Terendah</span>
+            <span class="hidden sm:inline">Terendah (sumber)</span>
+          </div>
+          <div class="num mt-1 text-xs sm:text-sm md:text-base text-ink-200 truncate">Rp 17.338</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Converter -->
+    <div class="card p-5 sm:p-6 md:p-6">
+      <div class="flex items-start sm:items-center justify-between gap-2 mb-4 flex-wrap">
+        <div class="min-w-0">
+          <div class="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase">Konverter</div>
+          <div class="text-ink-100 text-sm sm:text-base font-semibold mt-0.5">Hitung cepat</div>
+        </div>
+        <button class="chip shrink-0">&#x21C5; Balik arah</button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-2 sm:gap-3 items-stretch sm:items-center">
+        <div class="rounded-xl border border-line bg-bg-800/40 px-3 sm:px-4 py-2.5 sm:py-3 min-w-0">
+          <div class="text-ink-400 text-[10px] tracking-[0.16em] uppercase">Dari</div>
+          <div class="flex items-baseline gap-2 mt-1">
+            <input value="100" class="num bg-transparent outline-none text-ink-100 text-xl sm:text-2xl w-full min-w-0" />
+            <span class="text-ink-400 text-sm shrink-0">USD</span>
+          </div>
+        </div>
+        <div class="text-ink-400 text-center hidden sm:block">&rarr;</div>
+        <div class="text-ink-400 text-center sm:hidden -my-0.5">&darr;</div>
+        <div class="rounded-xl border border-accent-gold/25 bg-accent-gold/5 px-3 sm:px-4 py-2.5 sm:py-3 min-w-0">
+          <div class="text-accent-gold text-[10px] tracking-[0.16em] uppercase">Hasil</div>
+          <div class="num mt-1 text-xl sm:text-2xl text-ink-100 truncate">
+            Rp 1.735.200<span class="text-ink-400 text-sm ml-2">IDR</span>
+          </div>
+        </div>
+      </div>
+      <div class="text-ink-500 text-[11px] mt-3 num truncate">1 USD = Rp 17.352 IDR</div>
+    </div>
+  </div>
+
+  <!-- CHART RANGE TABS -->
+  <div class="mb-4 sm:mb-5">
+    <div class="flex justify-end mb-2 gap-1">
+      <button class="px-3 py-1.5 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold">7H</button>
+      <button class="px-3 py-1.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 text-accent-gold text-xs font-semibold">30H</button>
+      <button class="px-3 py-1.5 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold">90H</button>
+      <button class="px-3 py-1.5 rounded-lg border border-line bg-bg-800/40 text-ink-300 text-xs font-semibold">1T</button>
+    </div>
+
+    <!-- Chart card -->
+    <div class="card p-4 sm:p-5 md:p-6">
+      <div class="flex items-start sm:items-center justify-between gap-2 mb-3 sm:mb-4 flex-wrap">
+        <div class="min-w-0">
+          <div class="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase">Pergerakan Historis</div>
+          <div class="text-ink-100 text-sm sm:text-base font-semibold mt-0.5">USD/IDR &mdash; <span class="text-ink-400">30 hari</span></div>
+        </div>
+        <div class="chip chip-live shrink-0">&#9650; 1.84%</div>
+      </div>
+      <!-- mock chart svg -->
+      <svg viewBox="0 0 800 240" class="w-full h-[200px] sm:h-[240px] md:h-[260px]" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#F2A007" stop-opacity=".45"/>
+            <stop offset="100%" stop-color="#F2A007" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <g stroke="rgba(255,255,255,.05)">
+          <line x1="0" y1="60" x2="800" y2="60"/>
+          <line x1="0" y1="120" x2="800" y2="120"/>
+          <line x1="0" y1="180" x2="800" y2="180"/>
+        </g>
+        <path d="M0,170 C60,160 110,180 170,150 C230,120 290,140 350,110 C410,80 460,90 520,70 C580,50 640,80 700,55 C740,40 770,45 800,30 L800,240 L0,240 Z" fill="url(#g)"/>
+        <path d="M0,170 C60,160 110,180 170,150 C230,120 290,140 350,110 C410,80 460,90 520,70 C580,50 640,80 700,55 C740,40 770,45 800,30"
+              fill="none" stroke="#F2A007" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- MULTI + CRYPTO -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-5 mb-4 sm:mb-5">
+    <!-- MultiPairs -->
+    <div class="card p-4 sm:p-5 md:p-6">
+      <div class="flex items-start sm:items-center justify-between gap-2 mb-3 sm:mb-4 flex-wrap">
+        <div class="min-w-0">
+          <div class="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase">Mata Uang Lain</div>
+          <div class="text-ink-100 text-sm sm:text-base font-semibold mt-0.5">1 USD = &hellip;</div>
+        </div>
+        <span class="chip shrink-0">Klik untuk fokus</span>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2">
+        <button class="text-left rounded-xl border border-accent-gold/40 bg-accent-gold/5 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2"><span class="text-base shrink-0">ID</span><span class="text-xs font-semibold truncate text-accent-gold">IDR</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">Rp 17.352</div>
+        </button>
+        <button class="text-left rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2"><span class="text-base shrink-0">SG</span><span class="text-xs font-semibold truncate text-ink-300">SGD</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">1.3478</div>
+        </button>
+        <button class="text-left rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2"><span class="text-base shrink-0">MY</span><span class="text-xs font-semibold truncate text-ink-300">MYR</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">4.6921</div>
+        </button>
+        <button class="text-left rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2"><span class="text-base shrink-0">JP</span><span class="text-xs font-semibold truncate text-ink-300">JPY</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">156.21</div>
+        </button>
+        <button class="text-left rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2"><span class="text-base shrink-0">EU</span><span class="text-xs font-semibold truncate text-ink-300">EUR</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">0.9213</div>
+        </button>
+        <button class="text-left rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2"><span class="text-base shrink-0">CN</span><span class="text-xs font-semibold truncate text-ink-300">CNY</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">7.2018</div>
+        </button>
+        <button class="text-left rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2"><span class="text-base shrink-0">AU</span><span class="text-xs font-semibold truncate text-ink-300">AUD</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">1.5421</div>
+        </button>
+        <button class="text-left rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2"><span class="text-base shrink-0">GB</span><span class="text-xs font-semibold truncate text-ink-300">GBP</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">0.7841</div>
+        </button>
+        <button class="text-left rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2"><span class="text-base shrink-0">KR</span><span class="text-xs font-semibold truncate text-ink-300">KRW</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">1.378,4</div>
+        </button>
+        <button class="text-left rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2"><span class="text-base shrink-0">TH</span><span class="text-xs font-semibold truncate text-ink-300">THB</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">35.214</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- CryptoStrip -->
+    <div class="card p-4 sm:p-5 md:p-6">
+      <div class="flex items-start sm:items-center justify-between gap-2 mb-3 sm:mb-4 flex-wrap">
+        <div class="min-w-0">
+          <div class="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase">Kripto &rarr; IDR</div>
+          <div class="text-ink-100 text-sm sm:text-base font-semibold mt-0.5">Harga live</div>
+        </div>
+        <span class="chip shrink-0">jsDelivr (no-key)</span>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2">
+        <div class="rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:#F7931A"></span><span class="text-ink-300 text-xs font-semibold truncate">BTC</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">Rp 1.682.451.200</div>
+          <div class="num text-ink-500 text-[10px] sm:text-[11px] mt-0.5 truncate">$96.965,12</div>
+        </div>
+        <div class="rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:#627EEA"></span><span class="text-ink-300 text-xs font-semibold truncate">ETH</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">Rp 56.231.001</div>
+          <div class="num text-ink-500 text-[10px] sm:text-[11px] mt-0.5 truncate">$3.241,00</div>
+        </div>
+        <div class="rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:#F3BA2F"></span><span class="text-ink-300 text-xs font-semibold truncate">BNB</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">Rp 11.452.000</div>
+          <div class="num text-ink-500 text-[10px] sm:text-[11px] mt-0.5 truncate">$660,12</div>
+        </div>
+        <div class="rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:#9945FF"></span><span class="text-ink-300 text-xs font-semibold truncate">SOL</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">Rp 3.121.450</div>
+          <div class="num text-ink-500 text-[10px] sm:text-[11px] mt-0.5 truncate">$179,90</div>
+        </div>
+        <div class="rounded-xl border border-line bg-bg-800/40 px-2.5 sm:px-3 py-2.5 sm:py-3 min-w-0">
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:#22C55E"></span><span class="text-ink-300 text-xs font-semibold truncate">USDT</span></div>
+          <div class="num text-ink-100 text-xs sm:text-sm mt-1 sm:mt-1.5 truncate">Rp 17.350</div>
+          <div class="num text-ink-500 text-[10px] sm:text-[11px] mt-0.5 truncate">$1,00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOURCES -->
+  <div class="card p-4 sm:p-5 md:p-6">
+    <div class="flex items-start sm:items-center justify-between gap-2 mb-3 sm:mb-4 flex-wrap">
+      <div class="min-w-0">
+        <div class="text-ink-400 text-[10px] sm:text-[11px] tracking-[0.18em] uppercase">Sumber Data (Multi-Aggregator)</div>
+        <div class="text-ink-100 text-sm sm:text-base font-semibold mt-0.5">5/5 sumber merespons</div>
+      </div>
+      <span class="chip shrink-0 hidden sm:inline-flex">Median dipakai sebagai nilai akhir</span>
+      <span class="chip shrink-0 sm:hidden">Median = nilai akhir</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2">
+      <div class="flex items-center justify-between rounded-xl border border-line bg-bg-800/40 px-3 sm:px-4 py-2.5 sm:py-3 gap-2">
+        <div class="min-w-0 flex-1">
+          <div class="text-ink-200 text-xs sm:text-sm font-medium truncate">fawazahmed (jsDelivr)</div>
+          <div class="text-ink-500 text-[10px] sm:text-[11px] truncate">2026-05-19</div>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="num text-ink-100 text-xs sm:text-sm">Rp 17.355</div>
+          <div class="text-[10px] text-accent-green">+0.017%</div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between rounded-xl border border-line bg-bg-800/40 px-3 sm:px-4 py-2.5 sm:py-3 gap-2">
+        <div class="min-w-0 flex-1">
+          <div class="text-ink-200 text-xs sm:text-sm font-medium truncate">fawazahmed (Cloudflare)</div>
+          <div class="text-ink-500 text-[10px] sm:text-[11px] truncate">2026-05-19</div>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="num text-ink-100 text-xs sm:text-sm">Rp 17.355</div>
+          <div class="text-[10px] text-accent-green">+0.017%</div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between rounded-xl border border-line bg-bg-800/40 px-3 sm:px-4 py-2.5 sm:py-3 gap-2">
+        <div class="min-w-0 flex-1">
+          <div class="text-ink-200 text-xs sm:text-sm font-medium truncate">open.er-api.com</div>
+          <div class="text-ink-500 text-[10px] sm:text-[11px] truncate">Tue, 19 May 2026 00:00</div>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="num text-ink-100 text-xs sm:text-sm">Rp 17.371</div>
+          <div class="text-[10px] text-accent-green">+0.110%</div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between rounded-xl border border-line bg-bg-800/40 px-3 sm:px-4 py-2.5 sm:py-3 gap-2">
+        <div class="min-w-0 flex-1">
+          <div class="text-ink-200 text-xs sm:text-sm font-medium truncate">exchangerate-api.com</div>
+          <div class="text-ink-500 text-[10px] sm:text-[11px] truncate">2026-05-19</div>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="num text-ink-100 text-xs sm:text-sm">Rp 17.352</div>
+          <div class="text-[10px] text-ink-400">+0.000%</div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between rounded-xl border border-line bg-bg-800/40 px-3 sm:px-4 py-2.5 sm:py-3 gap-2">
+        <div class="min-w-0 flex-1">
+          <div class="text-ink-200 text-xs sm:text-sm font-medium truncate">frankfurter.dev (ECB)</div>
+          <div class="text-ink-500 text-[10px] sm:text-[11px] truncate">2026-05-16</div>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="num text-ink-100 text-xs sm:text-sm">Rp 17.338</div>
+          <div class="text-[10px] text-accent-red">-0.081%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-8 sm:mt-10 pt-5 sm:pt-6 border-t border-line text-ink-500 text-[11px] sm:text-xs flex flex-wrap items-center justify-between gap-2">
+    <div class="max-w-full">Data agregat dari beberapa public API gratis. Hanya untuk informasi &mdash; bukan saran investasi.</div>
+    <div class="num">19/05/2026 21:42:11</div>
+  </footer>
+</div>
+<!-- ============ APP ENDS ============ -->
+</div>
+
+<script>
+  const frame = document.getElementById('frame');
+  document.querySelectorAll('.device-bar button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.device-bar button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const w = btn.dataset.w;
+      frame.style.maxWidth = w + 'px';
+    });
+  });
+</script>
+</body>
+</html>
