@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CryptoSpike — Realtime Crypto Signals</title>
+<meta name="description" content="CryptoSpike continuously scans 200+ USDT pairs on Binance to surface high-probability setups using volatility, momentum and volume-spike analysis across multiple timeframes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   THEME TOKENS
+============================================================ */
+:root{
+  --accent:#16c784;
+  --accent-2:#0ea5e9;
+  --danger:#ea3943;
+  --warn:#f0b90b;
+  --radius:14px;
+  --radius-sm:10px;
+  --maxw:1180px;
+  --font:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+/* DARK (default) */
+html[data-theme="dark"]{
+  --bg:#0a0e17;
+  --bg-soft:#0f1525;
+  --surface:#121a2c;
+  --surface-2:#172238;
+  --border:rgba(255,255,255,.08);
+  --border-strong:rgba(255,255,255,.14);
+  --text:#e8eef7;
+  --text-soft:#9fb0c8;
+  --text-mut:#5f7088;
+  --shadow:0 24px 60px -24px rgba(0,0,0,.7);
+  --glow:0 0 60px -10px rgba(22,199,132,.35);
+  --grid-line:rgba(255,255,255,.035);
+  --hero-glow:radial-gradient(60% 60% at 70% 0%,rgba(22,199,132,.16),transparent 70%),radial-gradient(50% 50% at 10% 20%,rgba(14,165,233,.14),transparent 70%);
+}
+/* LIGHT */
+html[data-theme="light"]{
+  --bg:#f5f7fb;
+  --bg-soft:#ffffff;
+  --surface:#ffffff;
+  --surface-2:#f0f3f9;
+  --border:rgba(15,30,60,.10);
+  --border-strong:rgba(15,30,60,.18);
+  --text:#0d1b2a;
+  --text-soft:#41526a;
+  --text-mut:#7384a0;
+  --shadow:0 18px 48px -24px rgba(20,40,80,.25);
+  --glow:0 0 50px -12px rgba(22,199,132,.30);
+  --grid-line:rgba(10,30,60,.04);
+  --hero-glow:radial-gradient(60% 60% at 70% 0%,rgba(22,199,132,.12),transparent 70%),radial-gradient(50% 50% at 10% 20%,rgba(14,165,233,.10),transparent 70%);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  transition:background .35s var(--ease),color .35s var(--ease);
+}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+section{position:relative}
+
+/* ============================================================
+   BUTTONS / PILLS
+============================================================ */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-weight:600;font-size:14px;border-radius:999px;
+  padding:12px 22px;border:1px solid transparent;cursor:pointer;
+  transition:transform .15s var(--ease),box-shadow .2s var(--ease),background .2s var(--ease),border-color .2s var(--ease);
+  font-family:var(--font);
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--accent);color:#04140d;box-shadow:var(--glow)}
+.btn-primary:hover{background:#13b577;box-shadow:0 0 70px -8px rgba(22,199,132,.5)}
+.btn-ghost{background:transparent;color:var(--text);border-color:var(--border-strong)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.pill{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:12.5px;font-weight:600;letter-spacing:.02em;
+  padding:6px 14px;border-radius:999px;
+  background:var(--surface-2);border:1px solid var(--border);color:var(--text-soft);
+}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(22,199,132,.18);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ============================================================
+   HEADER
+============================================================ */
+header{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:saturate(150%) blur(14px);
+  background:color-mix(in srgb,var(--bg) 72%,transparent);
+  border-bottom:1px solid var(--border);
+  transition:background .35s var(--ease),border-color .35s var(--ease);
+}
+.nav{display:flex;align-items:center;justify-content:space-between;height:66px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:18px;letter-spacing:-.01em}
+.brand .mark{
+  width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  box-shadow:var(--glow);
+}
+.brand .mark svg{width:20px;height:20px;stroke:#04140d;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.brand b{color:var(--accent)}
+.nav-links{display:flex;align-items:center;gap:6px}
+.nav-links a{
+  font-size:14px;font-weight:500;color:var(--text-soft);
+  padding:8px 14px;border-radius:9px;transition:color .15s,background .15s;
+}
+.nav-links a:hover{color:var(--text);background:var(--surface-2)}
+.nav-right{display:flex;align-items:center;gap:10px}
+
+/* theme toggle */
+.theme-toggle{
+  width:42px;height:42px;border-radius:11px;
+  display:grid;place-items:center;cursor:pointer;
+  background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+  transition:transform .2s var(--ease),border-color .2s,background .2s;
+}
+.theme-toggle:hover{border-color:var(--accent);transform:rotate(-12deg)}
+.theme-toggle svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.theme-toggle .ico-sun{display:none}
+html[data-theme="light"] .theme-toggle .ico-sun{display:block}
+html[data-theme="light"] .theme-toggle .ico-moon{display:none}
+
+.hamburger{display:none}
+
+/* ============================================================
+   HERO
+============================================================ */
+.hero{padding:84px 0 60px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:var(--hero-glow);pointer-events:none}
+.hero::after{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:46px 46px;mask-image:radial-gradient(70% 60% at 50% 0%,#000,transparent 80%);pointer-events:none}
+.hero .wrap{position:relative;z-index:1}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:46px;align-items:center}
+.hero h1{
+  font-size:clamp(34px,5vw,56px);line-height:1.05;font-weight:900;
+  letter-spacing:-.025em;margin:18px 0 18px;
+}
+.hero h1 .grad{
+  background:linear-gradient(120deg,var(--accent),var(--accent-2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p.lead{font-size:17px;color:var(--text-soft);max-width:540px;margin-bottom:28px}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:30px}
+.trust-row{display:flex;align-items:center;gap:22px;flex-wrap:wrap;color:var(--text-mut);font-size:13px}
+.trust-row .t-item{display:flex;align-items:center;gap:8px}
+.trust-row svg{width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* hero ticker card */
+.scan-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:18px;
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.scan-head{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.scan-head .lhs{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px}
+.scan-head .lhs svg{width:17px;height:17px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.scan-head .scanning{font-family:var(--mono);font-size:11px;color:var(--text-mut)}
+.scan-body{padding:8px 0}
+.tk{display:grid;grid-template-columns:1.4fr 1fr 1fr .9fr;align-items:center;padding:11px 18px;font-size:13px;border-bottom:1px solid var(--border);transition:background .2s}
+.tk:last-child{border-bottom:none}
+.tk:hover{background:var(--surface-2)}
+.tk .sym{display:flex;align-items:center;gap:9px;font-weight:700}
+.tk .sym .ic{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;font-family:var(--mono);background:var(--surface-2);border:1px solid var(--border);color:var(--text-soft)}
+.tk .price{font-family:var(--mono);font-weight:500}
+.tk .chg{font-family:var(--mono);font-weight:600;text-align:right}
+.tk .chg.up{color:var(--accent)}.tk .chg.down{color:var(--danger)}
+.tk .sig{justify-self:end;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.04em}
+.sig.long{background:rgba(22,199,132,.14);color:var(--accent);border:1px solid rgba(22,199,132,.28)}
+.sig.short{background:rgba(234,57,67,.14);color:var(--danger);border:1px solid rgba(234,57,67,.28)}
+.sig.watch{background:rgba(240,185,11,.14);color:var(--warn);border:1px solid rgba(240,185,11,.28)}
+
+/* ============================================================
+   MARQUEE STATS
+============================================================ */
+.stats{padding:34px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg-soft)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;text-align:center}
+.stat .num{font-family:var(--mono);font-size:clamp(26px,3.4vw,38px);font-weight:700;color:var(--text);letter-spacing:-.02em}
+.stat .num span{color:var(--accent)}
+.stat .lbl{font-size:13px;color:var(--text-mut);margin-top:4px}
+
+/* ============================================================
+   SECTION SHELL
+============================================================ */
+.sec{padding:84px 0}
+.sec-head{text-align:center;max-width:640px;margin:0 auto 52px}
+.sec-head .pill{margin-bottom:16px}
+.sec-head h2{font-size:clamp(27px,4vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.sec-head p{color:var(--text-soft);font-size:16px;margin-top:14px}
+
+/* features */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.feat{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:26px 24px;transition:transform .2s var(--ease),border-color .2s,box-shadow .2s;
+}
+.feat:hover{transform:translateY(-4px);border-color:var(--border-strong);box-shadow:var(--shadow)}
+.feat .ic{
+  width:48px;height:48px;border-radius:13px;display:grid;place-items:center;margin-bottom:18px;
+  background:linear-gradient(135deg,rgba(22,199,132,.18),rgba(14,165,233,.12));
+  border:1px solid var(--border);
+}
+.feat .ic svg{width:24px;height:24px;stroke:var(--accent);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.feat h3{font-size:18px;font-weight:700;margin-bottom:8px}
+.feat p{color:var(--text-soft);font-size:14.5px}
+
+/* how it works */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;counter-reset:step}
+.step{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px 22px}
+.step::before{
+  counter-increment:step;content:"0" counter(step);
+  font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);
+  display:inline-block;margin-bottom:14px;
+  padding:5px 11px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);
+}
+.step h3{font-size:16px;font-weight:700;margin-bottom:7px}
+.step p{font-size:14px;color:var(--text-soft)}
+
+/* signals table section */
+.board{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.board-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 22px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.board-head h3{font-size:16px;font-weight:700;display:flex;align-items:center;gap:9px}
+.board-head h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(22,199,132,.18);animation:pulse 2s infinite}
+.filters{display:flex;gap:6px}
+.filters button{
+  font-family:var(--font);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:999px;cursor:pointer;
+  background:transparent;border:1px solid var(--border);color:var(--text-soft);transition:.18s;
+}
+.filters button:hover{color:var(--text);border-color:var(--border-strong)}
+.filters button.active{background:var(--accent);color:#04140d;border-color:var(--accent)}
+.table-scroll{overflow-x:auto}
+table.signals{width:100%;border-collapse:collapse;min-width:720px}
+table.signals th{
+  font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-mut);
+  font-weight:600;text-align:right;padding:13px 18px;border-bottom:1px solid var(--border);
+}
+table.signals th:first-child{text-align:left}
+table.signals td{padding:14px 18px;font-size:13.5px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--mono)}
+table.signals td:first-child{text-align:left;font-family:var(--font)}
+table.signals tr:last-child td{border-bottom:none}
+table.signals tbody tr{transition:background .18s}
+table.signals tbody tr:hover{background:var(--surface-2)}
+.pair{display:flex;align-items:center;gap:11px;font-weight:700}
+.pair .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;font-family:var(--mono);background:var(--surface-2);border:1px solid var(--border);color:var(--text-soft)}
+.pair small{display:block;font-size:11px;color:var(--text-mut);font-weight:500;font-family:var(--font)}
+.conf{display:inline-flex;align-items:center;gap:8px;justify-content:flex-end}
+.conf .bar{width:54px;height:6px;border-radius:4px;background:var(--surface-2);overflow:hidden;border:1px solid var(--border)}
+.conf .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.up{color:var(--accent)}.down{color:var(--danger)}
+
+/* pricing */
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
+.plan{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:30px 26px;display:flex;flex-direction:column;transition:transform .2s var(--ease),border-color .2s,box-shadow .2s}
+.plan:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+.plan.featured{border-color:var(--accent);box-shadow:var(--glow);position:relative}
+.plan.featured::before{content:"Most Popular";position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;letter-spacing:.05em;padding:5px 14px;border-radius:999px;background:var(--accent);color:#04140d}
+.plan h3{font-size:17px;font-weight:700}
+.plan .price{font-family:var(--mono);font-size:40px;font-weight:700;margin:14px 0 4px;letter-spacing:-.02em}
+.plan .price span{font-size:15px;color:var(--text-mut);font-weight:500}
+.plan .desc{color:var(--text-soft);font-size:14px;margin-bottom:20px}
+.plan ul{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:26px;flex:1}
+.plan li{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text-soft)}
+.plan li svg{width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:2px}
+.plan .btn{justify-content:center;width:100%}
+
+/* cta */
+.cta-band{margin:0 auto;max-width:var(--maxw);background:linear-gradient(120deg,rgba(22,199,132,.14),rgba(14,165,233,.1));border:1px solid var(--border-strong);border-radius:22px;padding:54px 40px;text-align:center;position:relative;overflow:hidden}
+.cta-band h2{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.02em}
+.cta-band p{color:var(--text-soft);font-size:16px;margin:14px auto 28px;max-width:520px}
+
+/* footer */
+footer{border-top:1px solid var(--border);padding:54px 0 30px;margin-top:84px;background:var(--bg-soft)}
+.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:30px;margin-bottom:40px}
+.foot-grid h4{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-mut);margin-bottom:14px}
+.foot-grid a{display:block;color:var(--text-soft);font-size:14px;padding:5px 0;transition:color .15s}
+.foot-grid a:hover{color:var(--accent)}
+.foot-about p{color:var(--text-soft);font-size:14px;margin-top:14px;max-width:300px}
+.disclaimer{font-size:12px;color:var(--text-mut);border-top:1px solid var(--border);padding-top:22px;line-height:1.7}
+.foot-bottom{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-top:18px;font-size:13px;color:var(--text-mut)}
+.socials{display:flex;gap:10px}
+.socials a{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--border);transition:.18s}
+.socials a:hover{border-color:var(--accent);color:var(--accent)}
+.socials svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* reveal animation */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:34px}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:26px}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .steps{grid-template-columns:1fr 1fr}
+  .plans{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  .nav-links{
+    position:fixed;inset:66px 0 auto 0;flex-direction:column;align-items:stretch;gap:0;
+    background:var(--bg-soft);border-bottom:1px solid var(--border);padding:10px 16px 18px;
+    transform:translateY(-130%);transition:transform .3s var(--ease);box-shadow:var(--shadow);
+  }
+  .nav-links.open{transform:none}
+  .nav-links a{padding:13px 10px;border-radius:10px}
+  .hamburger{display:grid;place-items:center;width:42px;height:42px;border-radius:11px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);cursor:pointer}
+  .hamburger svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .feat-grid,.steps{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr}
+  .hero{padding:54px 0 40px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== HEADER ===================== -->
+<header>
+  <div class="wrap nav">
+    <a href="#top" class="brand">
+      <span class="mark">
+        <svg viewBox="0 0 24 24"><polyline points="2,16 7,11 11,14 16,7 22,7"/><polyline points="16,7 22,7 22,13"/></svg>
+      </span>
+      Crypto<b>Spike</b>
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#signals">Signals</a>
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+    <div class="nav-right">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark / light theme" title="Toggle theme">
+        <svg class="ico-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="ico-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+      </button>
+      <a href="#pricing" class="btn btn-primary" style="padding:10px 18px">Start free</a>
+      <button class="hamburger" id="hamburger" aria-label="Open menu">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<span id="top"></span>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal in">
+      <span class="pill"><span class="dot"></span> Live engine · scanning now</span>
+      <h1>Realtime crypto signals,<br><span class="grad">before the spike.</span></h1>
+      <p class="lead">CryptoSpike continuously scans <strong>200+ USDT pairs</strong> on Binance and surfaces high-probability setups using volatility, momentum and volume-spike analysis across multiple timeframes.</p>
+      <div class="hero-cta">
+        <a href="#pricing" class="btn btn-primary">
+          Get started free
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+        </a>
+        <a href="#signals" class="btn btn-ghost">View live signals</a>
+      </div>
+      <div class="trust-row">
+        <span class="t-item"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> No card required</span>
+        <span class="t-item"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Realtime alerts</span>
+        <span class="t-item"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Cancel anytime</span>
+      </div>
+    </div>
+
+    <div class="reveal in scan-card">
+      <div class="scan-head">
+        <span class="lhs"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg> Spike Scanner</span>
+        <span class="scanning" id="scanStatus">scanning 214 pairs…</span>
+      </div>
+      <div class="scan-body" id="scanBody"><!-- injected --></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STATS ===================== -->
+<section class="stats">
+  <div class="wrap stats-grid">
+    <div class="stat"><div class="num"><span>200</span>+</div><div class="lbl">USDT pairs scanned</div></div>
+    <div class="stat"><div class="num"><span>24</span>/7</div><div class="lbl">Realtime monitoring</div></div>
+    <div class="stat"><div class="num">4<span>×</span></div><div class="lbl">Multi-timeframe analysis</div></div>
+    <div class="stat"><div class="num">&lt;<span>1</span>s</div><div class="lbl">Alert latency</div></div>
+  </div>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section class="sec" id="how">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="pill">How it works</span>
+      <h2>From raw market data to an actionable signal</h2>
+      <p>The CryptoSpike engine never sleeps. Here is the pipeline that turns 200+ live order books into a single, ranked watchlist.</p>
+    </div>
+    <div class="steps reveal">
+      <div class="step"><h3>Scan</h3><p>Continuously stream price &amp; volume for 200+ Binance USDT pairs.</p></div>
+      <div class="step"><h3>Detect</h3><p>Flag volatility expansion, momentum shifts and abnormal volume spikes.</p></div>
+      <div class="step"><h3>Confirm</h3><p>Cross-check across multiple timeframes to filter out market noise.</p></div>
+      <div class="step"><h3>Alert</h3><p>Push a ranked, high-probability setup to your dashboard in realtime.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LIVE SIGNALS ===================== -->
+<section class="sec" id="signals" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="pill"><span class="dot"></span> Live board</span>
+      <h2>Today's high-probability setups</h2>
+      <p>A snapshot of what the scanner is surfacing right now. Sample data shown for demonstration.</p>
+    </div>
+    <div class="board reveal">
+      <div class="board-head">
+        <h3><span class="dot"></span> Spike Board</h3>
+        <div class="filters" id="sigFilters">
+          <button class="active" data-f="all">All</button>
+          <button data-f="long">Long</button>
+          <button data-f="short">Short</button>
+          <button data-f="watch">Watch</button>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="signals">
+          <thead>
+            <tr>
+              <th>Pair</th><th>Price</th><th>24h</th><th>Signal</th><th>Timeframe</th><th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody id="sigBody"><!-- injected --></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FEATURES ===================== -->
+<section class="sec" id="features" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="pill">Features</span>
+      <h2>Built for traders who move fast</h2>
+      <p>Everything you need to catch the move early, without staring at charts all day.</p>
+    </div>
+    <div class="feat-grid reveal">
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 5-7 4 5"/><path d="M3 21h18"/></svg></div>
+        <h3>Volatility detection</h3>
+        <p>Spots expansion in price range the moment a pair starts to wake up.</p>
+      </div>
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24"><polyline points="2,12 7,12 10,4 14,20 17,12 22,12"/></svg></div>
+        <h3>Momentum scoring</h3>
+        <p>Quantifies trend strength so you focus only on pairs with real follow-through.</p>
+      </div>
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="13"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg></div>
+        <h3>Volume spikes</h3>
+        <p>Catches abnormal volume surges that often precede a breakout.</p>
+      </div>
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+        <h3>Multi-timeframe</h3>
+        <p>Confirms setups across 15m, 1h, 4h and 1d to cut down false signals.</p>
+      </div>
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+        <h3>Realtime alerts</h3>
+        <p>Get notified the instant a high-probability setup appears, sub-second latency.</p>
+      </div>
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <h3>Clean dashboard</h3>
+        <p>A focused, ranked watchlist instead of a wall of noisy indicators.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PRICING ===================== -->
+<section class="sec" id="pricing" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="pill">Pricing</span>
+      <h2>Start free, upgrade when you're ready</h2>
+      <p>Simple plans that scale with how active you trade. No hidden fees.</p>
+    </div>
+    <div class="plans reveal">
+      <div class="plan">
+        <h3>Starter</h3>
+        <div class="price">$0<span>/mo</span></div>
+        <div class="desc">For getting a feel of the scanner.</div>
+        <ul>
+          <li><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Top 20 pairs scanned</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> 1 timeframe (1h)</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Delayed signals</li>
+        </ul>
+        <a href="#" class="btn btn-ghost">Start free</a>
+      </div>
+      <div class="plan featured">
+        <h3>Pro</h3>
+        <div class="price">$29<span>/mo</span></div>
+        <div class="desc">For active swing &amp; day traders.</div>
+        <ul>
+          <li><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> All 200+ pairs scanned</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Multi-timeframe (15m–1d)</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Realtime alerts</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Telegram &amp; webhook</li>
+        </ul>
+        <a href="#" class="btn btn-primary">Go Pro</a>
+      </div>
+      <div class="plan">
+        <h3>Elite</h3>
+        <div class="price">$79<span>/mo</span></div>
+        <div class="desc">For pros &amp; small desks.</div>
+        <ul>
+          <li><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Everything in Pro</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> API access</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Custom indicators</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Priority support</li>
+        </ul>
+        <a href="#" class="btn btn-ghost">Contact us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<section class="sec" style="padding-top:0">
+  <div class="cta-band reveal">
+    <h2>Stop chasing. Start catching the spike.</h2>
+    <p>Join traders who let the engine do the scanning while they focus on execution.</p>
+    <a href="#pricing" class="btn btn-primary">Create free account</a>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-about">
+        <a href="#top" class="brand">
+          <span class="mark"><svg viewBox="0 0 24 24"><polyline points="2,16 7,11 11,14 16,7 22,7"/><polyline points="16,7 22,7 22,13"/></svg></span>
+          Crypto<b>Spike</b>
+        </a>
+        <p>Realtime crypto signal scanner for 200+ Binance USDT pairs. Catch the move before the spike.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <a href="#signals">Live signals</a>
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Blog</a>
+        <a href="#">Contact</a>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+        <a href="#">Risk disclosure</a>
+      </div>
+    </div>
+    <div class="disclaimer">
+      <strong>Risk disclaimer:</strong> CryptoSpike provides informational market analysis and signals only. Nothing here is financial advice. Cryptocurrency trading carries significant risk and you may lose your capital. Always do your own research.
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="year"></span> CryptoSpike. All rights reserved.</span>
+      <div class="socials">
+        <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
+        <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M22 3L2 11l6 2 2 6 3-4 5 4 4-16z"/></svg></a>
+        <a href="#" aria-label="Discord"><svg viewBox="0 0 24 24"><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><path d="M7 18s-2-1-3-4 0-7 2-8l1 2a11 11 0 0 1 6 0l1-2c2 1 3 5 2 8s-3 4-3 4"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   THEME TOGGLE (persisted)
+============================================================ */
+(function(){
+  var root=document.documentElement;
+  var stored=null;
+  try{stored=localStorage.getItem('cs-theme');}catch(e){}
+  if(stored){root.setAttribute('data-theme',stored);}
+  else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches){
+    root.setAttribute('data-theme','light');
+  }
+  document.getElementById('themeToggle').addEventListener('click',function(){
+    var next=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('cs-theme',next);}catch(e){}
+  });
+})();
+
+/* ============================================================
+   MOBILE MENU
+============================================================ */
+(function(){
+  var burger=document.getElementById('hamburger');
+  var links=document.getElementById('navLinks');
+  burger.addEventListener('click',function(){links.classList.toggle('open');});
+  links.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click',function(){links.classList.remove('open');});
+  });
+})();
+
+/* ============================================================
+   MOCK MARKET DATA  (demo only)
+============================================================ */
+var COINS=[
+  {s:'BTC',n:'Bitcoin',p:68420.50},{s:'ETH',n:'Ethereum',p:3540.18},
+  {s:'SOL',n:'Solana',p:172.44},{s:'BNB',n:'BNB',p:602.10},
+  {s:'XRP',n:'Ripple',p:0.6234},{s:'DOGE',n:'Dogecoin',p:0.1582},
+  {s:'AVAX',n:'Avalanche',p:38.27},{s:'LINK',n:'Chainlink',p:18.05},
+  {s:'TON',n:'Toncoin',p:7.21},{s:'ADA',n:'Cardano',p:0.4612},
+  {s:'NEAR',n:'Near',p:6.84},{s:'INJ',n:'Injective',p:27.93},
+  {s:'SUI',n:'Sui',p:1.642},{s:'APT',n:'Aptos',p:9.31},
+  {s:'ARB',n:'Arbitrum',p:1.123},{s:'OP',n:'Optimism',p:2.41}
+];
+var SIGS=['long','short','watch'];
+var TFS=['15m','1h','4h','1d'];
+
+function rnd(a,b){return Math.random()*(b-a)+a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function fmtPrice(p){return p>=100?p.toLocaleString('en-US',{maximumFractionDigits:2}):p>=1?p.toFixed(3):p.toFixed(4);}
+
+/* ----- hero scanner mini-list ----- */
+function buildScanner(){
+  var body=document.getElementById('scanBody');
+  var rows=COINS.slice(0,6).map(function(c){
+    var chg=rnd(-6,9);var sig=chg>3?'long':(chg<-2?'short':'watch');
+    return {c:c,chg:chg,sig:sig};
+  });
+  body.innerHTML=rows.map(function(r){
+    var up=r.chg>=0;
+    return '<div class="tk">'+
+      '<span class="sym"><span class="ic">'+r.c.s.slice(0,3)+'</span>'+r.c.s+'/USDT</span>'+
+      '<span class="price">$'+fmtPrice(r.c.p)+'</span>'+
+      '<span class="chg '+(up?'up':'down')+'">'+(up?'+':'')+r.chg.toFixed(2)+'%</span>'+
+      '<span class="sig '+r.sig+'">'+r.sig.toUpperCase()+'</span>'+
+    '</div>';
+  }).join('');
+}
+
+/* ----- full signals board ----- */
+var SIGNAL_ROWS=[];
+function buildSignals(){
+  SIGNAL_ROWS=COINS.map(function(c){
+    var chg=rnd(-8,12);
+    var sig=chg>4?'long':(chg<-3?'short':'watch');
+    return {c:c,chg:chg,sig:sig,tf:pick(TFS),conf:Math.round(rnd(58,97))};
+  });
+  renderSignals('all');
+}
+function renderSignals(filter){
+  var body=document.getElementById('sigBody');
+  var rows=SIGNAL_ROWS.filter(function(r){return filter==='all'||r.sig===filter;});
+  if(!rows.length){body.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-mut);padding:30px">No signals in this category right now.</td></tr>';return;}
+  body.innerHTML=rows.map(function(r){
+    var up=r.chg>=0;
+    return '<tr>'+
+      '<td><span class="pair"><span class="ic">'+r.c.s.slice(0,3)+'</span><span>'+r.c.s+'/USDT<small>'+r.c.n+'</small></span></span></td>'+
+      '<td>$'+fmtPrice(r.c.p)+'</td>'+
+      '<td class="'+(up?'up':'down')+'">'+(up?'+':'')+r.chg.toFixed(2)+'%</td>'+
+      '<td><span class="sig '+r.sig+'">'+r.sig.toUpperCase()+'</span></td>'+
+      '<td>'+r.tf+'</td>'+
+      '<td><span class="conf"><span class="bar"><i style="width:'+r.conf+'%"></i></span>'+r.conf+'%</span></td>'+
+    '</tr>';
+  }).join('');
+}
+document.getElementById('sigFilters').addEventListener('click',function(e){
+  var btn=e.target.closest('button');if(!btn)return;
+  this.querySelectorAll('button').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderSignals(btn.dataset.f);
+});
+
+/* ----- live-ish updates ----- */
+function tick(){
+  COINS.forEach(function(c){c.p=Math.max(0.0001,c.p*(1+rnd(-0.004,0.004)));});
+  buildScanner();
+  var n=Math.round(rnd(208,221));
+  document.getElementById('scanStatus').textContent='scanning '+n+' pairs…';
+}
+
+/* ----- scroll reveal ----- */
+(function(){
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}});
+  },{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+})();
+
+/* ----- init ----- */
+document.getElementById('year').textContent=new Date().getFullYear();
+buildScanner();
+buildSignals();
+setInterval(tick,2600);
+</script>
+</body>
+</html>
