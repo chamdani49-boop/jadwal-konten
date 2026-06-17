@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --grid: rgba(255, 255, 255, 0.04);
+}
+
+* {
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  font-feature-settings: "ss01", "cv11";
+}
+
+html,
+body {
+  background-color: #08090A;
+  color: #EDEEF0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: Geist, Inter, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle dot grid backdrop — like Linear */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(1000px 600px at 85% -10%, rgba(230,176,86,0.05), transparent 70%),
+    radial-gradient(900px 600px at -10% 30%, rgba(167,139,250,0.04), transparent 70%);
+}
+
+@media (max-width: 640px) {
+  button, [role="button"] {
+    min-height: 40px;
+  }
+}
+
+input, select, textarea {
+  font-size: 16px;
+}
+@media (min-width: 640px) {
+  input, select, textarea {
+    font-size: inherit;
+  }
+}
+
+/* Numeric tabular font */
+.num {
+  font-family: "JetBrains Mono", "Geist Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  font-feature-settings: "zero", "ss01";
+}
+
+/* Section divider */
+.section-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent);
+}
+
+/* Eyebrow label */
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #6E7480;
+}
+
+/* Scrollbar */
+*::-webkit-scrollbar { height: 6px; width: 6px; }
+*::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
+
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Pill / chip style — very subtle */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 500;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  color: #9BA1AC;
+  white-space: nowrap;
+  line-height: 1;
+}
+.chip:hover { color: #EDEEF0; border-color: rgba(255,255,255,0.16); }
+.chip-up { color:#3FCF8E; border-color: rgba(63,207,142,.25); background: rgba(63,207,142,.08); }
+.chip-down { color:#FF5C5C; border-color: rgba(255,92,92,.25); background: rgba(255,92,92,.08); }
+.chip-live { color:#3FCF8E; border-color: rgba(63,207,142,.25); background: rgba(63,207,142,.08); }
+.chip-warn { color:#E6B056; border-color: rgba(230,176,86,.25); background: rgba(230,176,86,.08); }
+.dot { width:6px; height:6px; border-radius:50%; background: currentColor; }
+
+/* Tab buttons — segmented */
+.seg {
+  display: inline-flex;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 2px;
+  background: rgba(255,255,255,0.02);
+}
+.seg button {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #9BA1AC;
+  border-radius: 6px;
+  transition: color .15s, background .15s;
+}
+.seg button:hover { color: #EDEEF0; }
+.seg button[data-active="true"] {
+  background: rgba(255,255,255,0.06);
+  color: #EDEEF0;
+}
+
+/* Subtle card surface — flatter than before */
+.surface {
+  background: rgba(255,255,255,0.015);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+}
+.surface-hover:hover { border-color: rgba(255,255,255,0.12); }
+
+/* Big headline number — financial style */
+.hero-number {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+}
+
+/* Selection */
+::selection {
+  background: rgba(230,176,86,0.30);
+  color: #fff;
+}
